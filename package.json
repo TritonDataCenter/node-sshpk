@@ -1,0 +1,27 @@
+{
+  "name": "node-ssh-key",
+  "version": "0.0.1",
+  "description": "A library for finding and using SSH key pairs",
+  "main": "lib/index.js",
+  "scripts": {
+    "test": "tap test/*.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/arekinath/node-ssh-key.git"
+  },
+  "author": "Joyent, Inc",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/arekinath/node-ssh-key/issues"
+  },
+  "homepage": "https://github.com/arekinath/node-ssh-key#readme",
+  "dependencies": {
+    "asn1": "^0.2.2",
+    "assert-plus": "^0.1.5",
+    "ctype": "^0.5.4"
+  },
+  "devDependencies": {
+    "tap": "0.4.2"
+  }
+}
