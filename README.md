@@ -32,8 +32,8 @@ console.log('size => %d bits', key.size);
 console.log('comment => %s', key.comment);
 
 /* Compute key fingerprints, in new OpenSSH (>6.7) format, and old MD5 */
-console.log('fingerprint => %s', key.fingerprint('sha256').toString());
-console.log('old-style fingerprint => %s', key.fingerprint().toString());
+console.log('fingerprint => %s', key.fingerprint().toString());
+console.log('old-style fingerprint => %s', key.fingerprint('md5').toString());
 ```
 
 Output:
@@ -129,7 +129,7 @@ Parameters
 
 Same as `this.toBuffer(format).toString()`.
 
-### `Key#fingerprint([algorithm = 'md5'])`
+### `Key#fingerprint([algorithm = 'sha256'])`
 
 Creates a new `Fingerprint` object representing this Key's fingerprint.
 
