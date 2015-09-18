@@ -36,7 +36,7 @@ console.log('fingerprint => %s', key.fingerprint().toString());
 console.log('old-style fingerprint => %s', key.fingerprint('md5').toString());
 ```
 
-Output:
+Output might be:
 
 ```
 type => rsa
@@ -114,6 +114,12 @@ for ECDSA this is the bit size of the curve in use.
 ### `Key#comment`
 
 Optional string, a key comment used by some formats (eg the `ssh` format).
+
+### `Key#curve`
+
+Only present if `this.type === 'ecdsa'`, string containing the name of the
+named curve used with this key. Possible values include `nistp256`, `nistp384`
+and `nistp521`.
 
 ### `Key#toBuffer([format = 'ssh'])`
 
