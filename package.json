@@ -1,21 +1,21 @@
 {
-  "name": "node-ssh-key",
+  "name": "sshpubkey",
   "version": "0.0.1",
-  "description": "A library for finding and using SSH key pairs",
+  "description": "A library for finding and using SSH public keys",
   "main": "lib/index.js",
   "scripts": {
     "test": "tap test/*.js"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/arekinath/node-ssh-key.git"
+    "url": "git+https://github.com/arekinath/node-sshpubkey.git"
   },
   "author": "Joyent, Inc",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/arekinath/node-ssh-key/issues"
+    "url": "https://github.com/arekinath/node-sshpubkey/issues"
   },
-  "homepage": "https://github.com/arekinath/node-ssh-key#readme",
+  "homepage": "https://github.com/arekinath/node-sshpubkey#readme",
   "dependencies": {
     "asn1": "^0.2.2",
     "assert-plus": "^0.1.5"
