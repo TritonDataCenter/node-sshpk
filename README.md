@@ -21,8 +21,6 @@ Examples
 var sshpubkey = require('sshpubkey');
 
 var fs = require('fs');
-var assert = require('assert');
-
 
 /* Read in an OpenSSH-format public key */
 var keyPub = fs.readFileSync('id_rsa.pub');
