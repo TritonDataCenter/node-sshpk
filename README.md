@@ -36,7 +36,7 @@ console.log('fingerprint => %s', key.fingerprint().toString());
 console.log('old-style fingerprint => %s', key.fingerprint('md5').toString());
 ```
 
-Output might be:
+Example output:
 
 ```
 type => rsa
@@ -63,7 +63,7 @@ var key = sshpubkey.parseKey(keyPriv, 'pem');
 var pemBuf = key.toBuffer('pem');
 
 /* Convert to SSH public key format (and return as a string) */
-var sshBuf = key.toString('ssh');
+var sshKey = key.toString('ssh');
 
 
 /* Make a crypto.Verifier with this key */
