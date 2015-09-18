@@ -26,7 +26,7 @@ var assert = require('assert');
 
 /* Read in an OpenSSH-format public key */
 var keyPub = fs.readFileSync('id_rsa.pub');
-var key = sshpubkey.Key.parse(keyPub, 'ssh');
+var key = sshpubkey.parseKey(keyPub, 'ssh');
 
 /* Get metadata about the key */
 console.log('type => %s', key.type);
@@ -48,17 +48,17 @@ fingerprint => SHA256:PYC9kPVC6J873CSIbfp0LwYeczP/W4ffObNCuDJ1u5w
 old-style fingerprint => a0:c8:ad:6c:32:9a:32:fa:59:cc:a9:8c:0a:0d:6e:bd
 ```
 
-More examples (convering between formats):
+More examples: converting between formats:
 
 ```js
 /* Read in a PEM public key (PKCS#8) */
 var keyPem = fs.readFileSync('id_rsa.pem');
-var key = sshpubkey.Key.parse(keyPem, 'pem');
+var key = sshpubkey.parseKey(keyPem, 'pem');
 
 
 /* Read in an OpenSSH/PEM *private* key, will load just the public half */
 var keyPriv = fs.readFileSync('id_ecdsa');
-var key = sshpubkey.Key.parse(keyPriv, 'pem');
+var key = sshpubkey.parseKey(keyPriv, 'pem');
 
 
 /* Convert to PEM PKCS#8 public key format */
@@ -74,10 +74,24 @@ v.update('some data here');
 var valid = v.verify(signature);
 ```
 
+Matching fingerprints with keys:
+
+```js
+var fp = sshpubkey.parseFingerprint('SHA256:PYC9kPVC6J873CSIbfp0LwYeczP/W4ffObNCuDJ1u5w');
+
+var keys = [sshpubkey.parseKey(...), sshpubkey.parseKey(...), ...];
+
+keys.forEach(function (key) {
+	if (fp.matches(key))
+		console.log('found it!')''
+});
+```
+
 Usage
 -----
 
 ### `Key.parse(data[, format = 'ssh'[, name]])`
+### `parseKey(data[, format = 'ssh'[, name]])`
 
 Parses a key from a given data format and returns a new `Key` object.
 
@@ -138,6 +152,7 @@ Parameters
 - `hashAlgorithm` -- String name of hash algorithm to use, any supported by
                      OpenSSL are valid, usually including `sha1`, `sha256`
 
+### `parseFingerprint(fingerprint[, algorithms])`
 ### `Fingerprint.parse(fingerprint[, algorithms])`
 
 Pre-parses a fingerprint, creating a `Fingerprint` object that can be used to
