@@ -150,8 +150,8 @@ Parameters
 - `hashAlgorithm` -- String name of hash algorithm to use, any supported by
                      OpenSSL are valid, usually including `sha1`, `sha256`
 
-### `parseFingerprint(fingerprint[, algorithms])`
 ### `Fingerprint.parse(fingerprint[, algorithms])`
+### `parseFingerprint(fingerprint[, algorithms])`
 
 Pre-parses a fingerprint, creating a `Fingerprint` object that can be used to
 quickly locate a key by using the `Fingerprint#matches` function.
