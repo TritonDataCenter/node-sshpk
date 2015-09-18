@@ -77,7 +77,7 @@ var valid = v.verify(signature);
 Usage
 -----
 
-### `Key.parse(data[, format = 'ssh')`
+### `Key.parse(data[, format = 'ssh'[, name]])`
 
 Parses a key from a given data format and returns a new `Key` object.
 
@@ -87,6 +87,8 @@ Parameters
 - `format` -- String name of format to use, valid options are `pem` (supports
               both PKCS#1 and PKCS#8), `rfc4253` (raw OpenSSH wire format, as
               returned by `ssh-agent`, for example), `ssh` (OpenSSH format)
+- `name` -- Optional name for the key being parsed (eg. the filename that
+            was opened). Used to generate Error messages
 
 ### `Key#type`
 
@@ -192,3 +194,13 @@ Properties
 
 - `fingerprint` -- if caused by a fingerprint, the string value given
 - `format` -- if caused by an invalid format specification, the string value given
+
+### `KeyParseError`
+
+The key data given could not be parsed as a valid key.
+
+Properties
+
+- `keyName` -- `name` that was given to `Key#parse`
+- `format` -- the `format` that was trying to parse the key
+- `innerErr` -- the inner Error thrown by the format parser
