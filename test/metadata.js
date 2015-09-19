@@ -2,7 +2,7 @@
 
 var test = require('tap').test;
 
-var sshpubkey = require('../lib/index');
+var sshpk = require('../lib/index');
 
 var SSH_1024 = 'ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAIEAvad19ePSDckmgmo6Unqmd8' +
 	'n2G7o1794VN3FazVhV09yooXIuUhA+7OmT7ChiHueayxSubgL2MrO/HvvF/GGVUs/t3e0u4' +
@@ -35,28 +35,28 @@ var DSA_1024 = 'ssh-dss AAAAB3NzaC1kc3MAAACBAKK5sckoM05sOPajUcTWG0zPTvyRmj6' +
 	'Wgb6X+vN9W8SOb2668IL7Vg== mark@bluesnoop.local';
 
 test('rsa1024 key metadata', function(t) {
-	var k = sshpubkey.parseKey(SSH_1024, 'ssh');
+	var k = sshpk.parseKey(SSH_1024, 'ssh');
 	t.equal(k.type, 'rsa');
 	t.equal(k.size, 1024);
 	t.end();
 });
 
 test('dsa1024 key metadata', function(t) {
-	var k = sshpubkey.parseKey(DSA_1024, 'ssh');
+	var k = sshpk.parseKey(DSA_1024, 'ssh');
 	t.equal(k.type, 'dsa');
 	t.equal(k.size, 1024);
 	t.end();
 });
 
 test('rsa2048 pem key metadata', function(t) {
-	var k = sshpubkey.parseKey(PEM_2048, 'pem');
+	var k = sshpk.parseKey(PEM_2048, 'pem');
 	t.equal(k.type, 'rsa');
 	t.equal(k.size, 2048);
 	t.end();
 });
 
 test('ecdsa256 key metadata', function(t) {
-	var k = sshpubkey.parseKey(ECDSA_256, 'ssh');
+	var k = sshpk.parseKey(ECDSA_256, 'ssh');
 	t.equal(k.type, 'ecdsa');
 	t.equal(k.curve, 'nistp256');
 	t.equal(k.size, 256);

@@ -1,8 +1,8 @@
-sshpubkey
+sshpk
 =========
 
-Parse, convert, fingerprint and use SSH public keys in pure node -- no 
-`ssh-keygen` or other external dependencies).
+Parse, convert, fingerprint and use SSH public keys in pure node -- no
+`ssh-keygen` or other external dependencies.
 
 Supports RSA, DSA and ECDSA (nistp-*) key types. Can also parse SSH private
 keys in PEM format and output their public half.
@@ -19,20 +19,20 @@ Install
 -------
 
 ```
-npm install sshpubkey
+npm install sshpk
 ```
 
 Examples
 --------
 
 ```js
-var sshpubkey = require('sshpubkey');
+var sshpk = require('sshpk');
 
 var fs = require('fs');
 
 /* Read in an OpenSSH-format public key */
 var keyPub = fs.readFileSync('id_rsa.pub');
-var key = sshpubkey.parseKey(keyPub, 'ssh');
+var key = sshpk.parseKey(keyPub, 'ssh');
 
 /* Get metadata about the key */
 console.log('type => %s', key.type);
@@ -59,12 +59,12 @@ More examples: converting between formats:
 ```js
 /* Read in a PEM public key (PKCS#8) */
 var keyPem = fs.readFileSync('id_rsa.pem');
-var key = sshpubkey.parseKey(keyPem, 'pem');
+var key = sshpk.parseKey(keyPem, 'pem');
 
 
 /* Read in an OpenSSH/PEM *private* key, will load just the public half */
 var keyPriv = fs.readFileSync('id_ecdsa');
-var key = sshpubkey.parseKey(keyPriv, 'pem');
+var key = sshpk.parseKey(keyPriv, 'pem');
 
 
 /* Convert to PEM PKCS#8 public key format */
@@ -83,9 +83,9 @@ var valid = v.verify(signature);
 Matching fingerprints with keys:
 
 ```js
-var fp = sshpubkey.parseFingerprint('SHA256:PYC9kPVC6J873CSIbfp0LwYeczP/W4ffObNCuDJ1u5w');
+var fp = sshpk.parseFingerprint('SHA256:PYC9kPVC6J873CSIbfp0LwYeczP/W4ffObNCuDJ1u5w');
 
-var keys = [sshpubkey.parseKey(...), sshpubkey.parseKey(...), ...];
+var keys = [sshpk.parseKey(...), sshpk.parseKey(...), ...];
 
 keys.forEach(function (key) {
 	if (fp.matches(key))
