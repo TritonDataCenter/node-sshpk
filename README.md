@@ -7,6 +7,14 @@ Parse, convert, fingerprint and use SSH public keys in pure node -- no
 Supports RSA, DSA and ECDSA (nistp-*) key types. Can also parse SSH private
 keys in PEM format and output their public half.
 
+This library has been extracted from
+[`node-http-signature`](https://github.com/joyent/node-http-signature)
+(work by [Mark Cavage](https://github.com/mcavage) and
+[Dave Eddy](https://github.com/bahamas10)) and
+[`node-ssh-fingerprint`](https://github.com/bahamas10/node-ssh-fingerprint)
+(work by Dave Eddy), with some additions (including ECDSA support) by
+[Alex Wilson](https://github.com/arekinath).
+
 Install
 -------
 

@@ -11,6 +11,20 @@
     "url": "git+https://github.com/arekinath/node-sshpubkey.git"
   },
   "author": "Joyent, Inc",
+  "contributors": [
+    {
+      "name": "Dave Eddy",
+      "email": "dave@daveeddy.com"
+    },
+    {
+      "name": "Mark Cavage",
+      "email": "mcavage@gmail.com"
+    },
+    {
+      "name": "Alex Wilson",
+      "email": "alex@cooperi.net"
+    }
+  ],
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/arekinath/node-sshpubkey/issues"
