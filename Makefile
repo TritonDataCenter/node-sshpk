@@ -44,7 +44,7 @@ CLEAN_FILES += $(TAP) ./node_modules/tap
 
 .PHONY: test
 test: all
-	TAP=1 $(TAP) test/*.test.js
+	TAP=1 $(TAP) test/*.js
 
 include ./tools/mk/Makefile.deps
 include ./tools/mk/Makefile.node_deps.targ
