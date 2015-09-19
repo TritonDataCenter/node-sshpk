@@ -96,7 +96,6 @@ keys.forEach(function (key) {
 Usage
 -----
 
-### `Key.parse(data[, format = 'ssh'[, name]])`
 ### `parseKey(data[, format = 'ssh'[, name]])`
 
 Parses a key from a given data format and returns a new `Key` object.
@@ -164,7 +163,6 @@ Parameters
 - `hashAlgorithm` -- String name of hash algorithm to use, any supported by
                      OpenSSL are valid, usually including `sha1`, `sha256`
 
-### `Fingerprint.parse(fingerprint[, algorithms])`
 ### `parseFingerprint(fingerprint[, algorithms])`
 
 Pre-parses a fingerprint, creating a `Fingerprint` object that can be used to

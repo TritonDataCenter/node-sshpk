@@ -2,7 +2,7 @@
 
 var test = require('tap').test;
 
-var Key = require('../lib/index').Key;
+var sshpubkey = require('../lib/index');
 
 ///--- Globals
 var SSH_1024 = 'ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAIEAvad19ePSDckmgmo6Unqmd8' +
@@ -117,53 +117,53 @@ var DSA_1024_PEM = '-----BEGIN PUBLIC KEY-----\n' +
 ///--- Tests
 
 test('1024b pem to rsa ssh key', function(t) {
-	var k = Key.parse(PEM_1024, 'pem');
+	var k = sshpubkey.parseKey(PEM_1024, 'pem');
 	k.comment = 'mark@foo.local';
 	t.equal(k.toString('ssh'), SSH_1024);
 	t.end();
 });
 
 test('2048b pem to rsa ssh key', function(t) {
-	var k = Key.parse(PEM_2048, 'pem');
+	var k = sshpubkey.parseKey(PEM_2048, 'pem');
 	k.comment = 'mark@bluesnoop.local';
 	t.equal(k.toString('ssh'), SSH_2048);
 	t.end();
 });
 
 test('2048b pem private to rsa ssh key', function(t) {
-	var k = Key.parse(PEM_PRIVATE_2048, 'pem');
+	var k = sshpubkey.parseKey(PEM_PRIVATE_2048, 'pem');
 	k.comment = 'mark@bluesnoop.local';
 	t.equal(k.toString('ssh'), SSH_PRIVATE_2048);
 	t.end();
 });
 
 test('4096b pem to rsa ssh key', function(t) {
-	var k = Key.parse(PEM_4096, 'pem');
+	var k = sshpubkey.parseKey(PEM_4096, 'pem');
 	k.comment = 'mark@bluesnoop.local';
 	t.equal(k.toString('ssh'), SSH_4096);
 	t.end();
 });
 
 test('1024b rsa ssh key', function(t) {
-	var k = Key.parse(SSH_1024, 'ssh');
+	var k = sshpubkey.parseKey(SSH_1024, 'ssh');
 	t.equal(k.toString('pem'), PEM_1024);
 	t.end();
 });
 
 test('2048b rsa ssh key', function(t) {
-	var k = Key.parse(SSH_2048, 'ssh');
+	var k = sshpubkey.parseKey(SSH_2048, 'ssh');
 	t.equal(k.toString('pem'), PEM_2048);
 	t.end();
 });
 
 test('4096b rsa ssh key', function(t) {
-	var k = Key.parse(SSH_4096, 'ssh');
+	var k = sshpubkey.parseKey(SSH_4096, 'ssh');
 	t.equal(k.toString('pem'), PEM_4096);
 	t.end();
 });
 
 test('1024b dsa ssh key', function(t) {
-	var k = Key.parse(DSA_1024, 'ssh');
+	var k = sshpubkey.parseKey(DSA_1024, 'ssh');
 	t.equal(k.toString('pem'), DSA_1024_PEM);
 	t.end();
 });
