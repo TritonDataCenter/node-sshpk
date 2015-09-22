@@ -4,7 +4,7 @@ sshpk
 Parse, convert, fingerprint and use SSH public keys in pure node -- no
 `ssh-keygen` or other external dependencies.
 
-Supports RSA, DSA and ECDSA (nistp-*) key types. Can also parse SSH private
+Supports RSA, DSA and ECDSA (nistp-\*) key types. Can also parse SSH private
 keys in PEM format and output their public half.
 
 This library has been extracted from
@@ -89,7 +89,7 @@ var keys = [sshpk.parseKey(...), sshpk.parseKey(...), ...];
 
 keys.forEach(function (key) {
 	if (fp.matches(key))
-		console.log('found it!')''
+		console.log('found it!');
 });
 ```
 
