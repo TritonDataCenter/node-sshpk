@@ -29,6 +29,9 @@
   "bugs": {
     "url": "https://github.com/arekinath/node-sshpk/issues"
   },
+  "engines": {
+    "node": ">=0.8.0"
+  },
   "homepage": "https://github.com/arekinath/node-sshpk#readme",
   "dependencies": {
     "asn1": "^0.2.2",
