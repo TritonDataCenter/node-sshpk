@@ -1,6 +1,6 @@
 // Copyright 2011 Joyent, Inc.  All rights reserved.
 
-var test = require('tap').test;
+var test = require('tape').test;
 
 var utils = require('../lib/utils');
 
