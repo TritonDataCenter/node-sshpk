@@ -114,6 +114,21 @@ var DSA_1024_PEM = '-----BEGIN PUBLIC KEY-----\n' +
 	'W8SOb2668IL7Vg==\n' +
 	'-----END PUBLIC KEY-----\n';
 
+var ENC_PRIVATE = '-----BEGIN RSA PRIVATE KEY-----\n' +
+	'Proc-Type: 4,ENCRYPTED\n' +
+	'DEK-Info: AES-128-CBC,B3095F1FAF29BE6554540D24F17D14DB\n\n' +
+	'1OJdgfzsXazrhPZ7pO9Q27Pr97+OsU8FUxiCrDrEP71piJMJrmifue9KfOoAmC1L\n' +
+	'FhaKXGSmRnP1/odgG7KBJ8ybIkZ5gVMz/dU4hR0SyA3zLMx+sV68oqYYw4s0EjrA\n' +
+	'KYzQmMc78ouC6yQA4r+psgJ2sgK5VwwB48c0J5lO60HUeyEsno6iGY7VW/Kmt76O\n' +
+	'Kl8/LwA9qE2U/1u6pRsoaD34CD2E+m/IwCUIyLeri04tiMfyE0RKTL9EacvxExCu\n' +
+	'ucwBlvtGIcQcChw1JJqGxTXBeCrz8Kb3uWNrZ+MME3OEh4qWFPgT6XqeE/gociym\n' +
+	'rhyKffZKsnJts0TqxqSuxtpLM5+WaYAGbkEHzuC/chOsynFRKxZomV65ddufmO3N\n' +
+	'Kb8B3H+2+Fo9x5iucEBhj4MBLHlZ7ZkQ8yEP+E0d0PuPRIFZ3aRcKPuaoZIc/AiQ\n' +
+	'8w1GGAU1TZWWHs1L4pF7OWyWwuq3NkzWLzL7MkNx++zmxXpIPMKDnFTLuBu24nCk\n' +
+	'gBx85sgirfSJBwx1mpQzsD1PSE7krAzlA4DRfgPChAWJnlUn89aPJ52uokHneJIK\n' +
+	'z8/ApT6HCd3EnH9VHEtXp116ZVk4PhRiiOMY/ek2uhFK57wgMxOrRM3OgODrd+5A\n' +
+	'-----END RSA PRIVATE KEY-----\n';
+
 ///--- Tests
 
 test('1024b pem to rsa ssh key', function(t) {
@@ -168,4 +183,9 @@ test('1024b dsa ssh key', function(t) {
 	t.end();
 });
 
-
+test('encrypted private key', function(t) {
+	t.throws(function () {
+		var k = sshpk.parseKey(ENC_PRIVATE, 'pem');
+	});
+	t.end();
+});
