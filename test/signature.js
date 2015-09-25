@@ -1,0 +1,96 @@
+// Copyright 2011 Joyent, Inc.  All rights reserved.
+
+var test = require('tape').test;
+
+var sshpk = require('../lib/index');
+var fs = require('fs');
+var path = require('path');
+var crypto = require('crypto');
+
+var testDir = __dirname;
+
+var RSA_PEM = fs.readFileSync(path.join(testDir, 'id_rsa'));
+var DSA_PEM = fs.readFileSync(path.join(testDir, 'id_dsa'));
+var ECDSA_PEM = fs.readFileSync(path.join(testDir, 'id_ecdsa'));
+
+var RSA_KEY, DSA_KEY, ECDSA_KEY;
+
+var DSA_SIG_ASN1 = 'MC0CFQCMhYhmerSHEK8h3Dd6DkWQggzY9QIUZ0sK0YNM9X3XfXo+jHiW' +
+    'cp7D1zU=';
+var ECDSA_SIG_ASN1 = 'MGUCMHkr2PgfR6vhLvXcY9bJOZN1AJAq9+YGmca95AC6iaNy3vqihq' +
+    'fuYQMaH5xO7HRdUQIxAN9BGGg2TQ8VL1kIfBzHUXA4eEbhEWStxeHKwscfxr5oj5yh5dI5F' +
+    'Fz5o4JnQzaqkQ=='
+var RSA_SIG = 'XSnn5R/INegb91WFY29K/oI0LEqEBFMmr6JkeTgw19yD9KsBhnMW5v7XvizWk' +
+    'oWYfnpO+LjJMMpYEMVayleexjuYH88EihViCF/VciqSCK0lHpfPQ9NHiKlK+KRdtzNezHta' +
+    'YlqCAbk2OAJF/mr/y+0SSm5jrDeJcz/a21gRuf4=';
+var DSA_SIG_HEX = '8c8588667ab48710af21dc377a0e4590820cd8f5' +
+    '674b0ad1834cf57dd77d7a3e8c7896729ec3d735';
+
+var DSA_SIG2_SSH = 'IcR83A4YPEn22Vnh09S9RHRhVD5fol0BoLbC1wcRpvoR46OZQguEzQ==';
+
+var ECDSA_SIG2_SSH = 'AAAAMHs/mn99fHqPG3YsD5WOcZtLxmKwTvII1zzKKIZCgzmtgw9ttg' +
+    '0i5W0yNCEJFc9eMQAAADEA1glXKGoiWzQKaVg0r2RQjnwtioaSV2a0WJFmRdxUi6UzNKbBQ' +
+    'PanBc1MjwLVFnck';
+
+var ECDSA2_SIG_SSH = 'AAAAIQCI1U+x3NzeTwPtISDGhGrPaqURX/NiCCbRzrtghOTaewAAACE' +
+    'AvL6M14xBYD1DHACgO+rkZqA+IbN5jcdCUx858CEoz9c=';
+
+test('setup', function(t) {
+	RSA_KEY = sshpk.parseKey(RSA_PEM, 'pem');
+	DSA_KEY = sshpk.parseKey(DSA_PEM, 'pem');
+	ECDSA_KEY = sshpk.parseKey(ECDSA_PEM, 'pem');
+	t.end();
+});
+
+test('convert RSA sig to SSH format', function(t) {
+	var sig = sshpk.parseSignature(RSA_SIG, 'rsa', 'asn1');
+	t.strictEqual(sig.toString('ssh'), RSA_SIG);
+	t.end();
+});
+
+test('convert DSA sig to SSH format and back', function(t) {
+	var sig = sshpk.parseSignature(DSA_SIG_ASN1, 'dsa', 'asn1');
+	t.strictEqual(sig.toString('asn1'), DSA_SIG_ASN1);
+	t.strictEqual(sig.toBuffer('ssh').toString('hex'), DSA_SIG_HEX);
+	var sig2 = sshpk.parseSignature(sig.toString('ssh'), 'dsa', 'ssh');
+	t.strictEqual(sig2.toString('asn1'), DSA_SIG_ASN1);
+	t.end();
+});
+
+test('convert ECDSA sig to SSH format and back', function(t) {
+	var sig = sshpk.parseSignature(ECDSA_SIG_ASN1, 'ecdsa', 'asn1');
+	t.strictEqual(sig.toString('asn1'), ECDSA_SIG_ASN1);
+	var sig2 = sshpk.parseSignature(sig.toString('ssh'), 'ecdsa', 'ssh');
+	t.strictEqual(sig2.toString('asn1'), ECDSA_SIG_ASN1);
+	t.end();
+});
+
+test('convert SSH DSA sig and verify', function(t) {
+	var key = sshpk.parseKey(
+	    fs.readFileSync(path.join(testDir, 'id_dsa')), 'pem');
+	var sig = sshpk.parseSignature(DSA_SIG2_SSH, 'dsa', 'ssh');
+	var s = key.createVerify();
+	s.update('foobar');
+	t.ok(s.verify(sig));
+	t.end();
+});
+
+test('convert SSH ECDSA-256 sig and verify', function(t) {
+	var key = sshpk.parseKey(
+	    fs.readFileSync(path.join(testDir, 'id_ecdsa2')), 'pem');
+	var sig = sshpk.parseSignature(ECDSA2_SIG_SSH, 'ecdsa', 'ssh');
+	var s = key.createVerify();
+	s.update('foobar');
+	t.ok(s.verify(sig));
+	t.end();
+});
+
+test('convert SSH ECDSA-384 sig and verify', function(t) {
+	var key = sshpk.parseKey(
+	    fs.readFileSync(path.join(testDir, 'id_ecdsa')), 'pem');
+	var sig = sshpk.parseSignature(ECDSA_SIG2_SSH, 'ecdsa', 'ssh');
+	var s = key.createVerify();
+	s.update('foobar');
+	t.ok(s.verify(sig));
+	t.end();
+});
