@@ -151,7 +151,7 @@ Parameters
 - `algorithm` -- String name of hash algorithm to use, valid options are `md5`,
                  `sha1`, `sha256`, `sha384`, `sha512`
 
-### `Key#createVerify(hashAlgorithm)`
+### `Key#createVerify([hashAlgorithm])`
 
 Creates a `crypto.Verifier` specialized to use this Key (and the correct public
 key algorithm to match it). The returned Verifier has the same API as a regular
@@ -160,8 +160,15 @@ argument.
 
 Parameters
 
-- `hashAlgorithm` -- String name of hash algorithm to use, any supported by
-                     OpenSSL are valid, usually including `sha1`, `sha256`
+- `hashAlgorithm` -- optional String name of hash algorithm to use, any
+                     supported by OpenSSL are valid, usually including
+                     `sha1`, `sha256`.
+
+`v.verify(signature[, format])` Parameters
+
+- `signature` -- either a Signature object, or a Buffer or String
+- `format` -- optional String, name of format to interpret given String with.
+              Not valid if `signature` is a Signature or Buffer.
 
 ### `parseFingerprint(fingerprint[, algorithms])`
 
@@ -193,6 +200,36 @@ uses double-hashing to avoid leaking timing information. Returns a boolean.
 Parameters
 
 - `key` -- a `Key` object, the key to match this fingerprint against
+
+### `parseSignature(signature, algorithm, format)`
+
+Parses a signature in a given format, createing a `Signature` object. Useful
+for converting between the SSH and ASN.1 (PKCS/OpenSSL) signature formats for
+DSA and ECDSA.
+
+A Signature object can also be passed to a verifier produced by
+`Key#createVerify()` and it will automatically be converted into the correct
+format for verification.
+
+Parameters
+
+- `signature` -- a Buffer (binary) or String (base64), data of the actual
+                 signature in the given format
+- `algorithm` -- a String, name of the algorithm to be used, possible values
+                 are `rsa`, `dsa` and `ecdsa`
+- `format` -- a String, either `asn1` or `ssh`
+
+### `Signature#toBuffer([format = 'asn1'])`
+
+Converts a Signature to the given format and returns it as a Buffer.
+
+Parameters
+
+- `format` -- a String, either `asn1` or `ssh`
+
+### `Signature#toString([format = 'asn1'])`
+
+Same as `this.toBuffer(format).toString('base64')`.
 
 Errors
 ------
