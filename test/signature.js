@@ -27,14 +27,22 @@ var DSA_SIG_HEX = '00000007' + '7373682d647373' + '00000028' +
     '8c8588667ab48710af21dc377a0e4590820cd8f5' +
     '674b0ad1834cf57dd77d7a3e8c7896729ec3d735';
 
+var RSA_SIG_SSH = 'AAAAB3NzaC1yc2EAAACAXSnn5R/INegb91WFY29K/oI0LEqEBFMmr6Jke' +
+    'Tgw19yD9KsBhnMW5v7XvizWkoWYfnpO+LjJMMpYEMVayleexjuYH88EihViCF/VciqSCK0l' +
+    'HpfPQ9NHiKlK+KRdtzNezHtaYlqCAbk2OAJF/mr/y+0SSm5jrDeJcz/a21gRuf4=';
+
 var DSA_SIG2_SSH = 'IcR83A4YPEn22Vnh09S9RHRhVD5fol0BoLbC1wcRpvoR46OZQguEzQ==';
 
 var ECDSA_SIG2_SSH = 'AAAAMHs/mn99fHqPG3YsD5WOcZtLxmKwTvII1zzKKIZCgzmtgw9ttg' +
     '0i5W0yNCEJFc9eMQAAADEA1glXKGoiWzQKaVg0r2RQjnwtioaSV2a0WJFmRdxUi6UzNKbBQ' +
     'PanBc1MjwLVFnck';
 
-var ECDSA2_SIG_SSH = 'AAAAIQCI1U+x3NzeTwPtISDGhGrPaqURX/NiCCbRzrtghOTaewAAACE' +
-    'AvL6M14xBYD1DHACgO+rkZqA+IbN5jcdCUx858CEoz9c=';
+var ECDSA2_SIG_SSH = 'AAAAIQCI1U+x3NzeTwPtISDGhGrPaqURX/NiCCbRzrtghOTaewAAAC' +
+    'EAvL6M14xBYD1DHACgO+rkZqA+IbN5jcdCUx858CEoz9c=';
+
+var ECDSA_SIG3_SSH = 'AAAAE2VjZHNhLXNoYTItbmlzdHAzODQAAABoAAAAMEfV+/DfXI5bYq' +
+    'niW7H+KQSBQTqT4ChUtHfCd0AYH+QzwBf16R+H2JjAxuKzIhjjggAAADAlmHXEs07JDWzO+' +
+    'cPy1k/gec3OQaKv7UOCcThjA5QQT840JgFbaoR7q71ZdU1Te0o=';
 
 test('setup', function(t) {
 	RSA_KEY = sshpk.parseKey(RSA_PEM, 'pem');
@@ -45,7 +53,17 @@ test('setup', function(t) {
 
 test('convert RSA sig to SSH format', function(t) {
 	var sig = sshpk.parseSignature(RSA_SIG, 'rsa', 'asn1');
-	t.strictEqual(sig.toString('ssh'), RSA_SIG);
+	t.strictEqual(sig.toString('ssh'), RSA_SIG_SSH);
+	t.end();
+});
+
+test('parse RSA sig in full wire SSH format and verify', function(t) {
+	var sig = sshpk.parseSignature(RSA_SIG_SSH, 'rsa', 'ssh');
+	var key = sshpk.parseKey(
+	    fs.readFileSync(path.join(testDir, 'id_rsa')), 'pem');
+	var s = key.createVerify('sha1');
+	s.update('foobar');
+	t.ok(s.verify(sig));
 	t.end();
 });
 
@@ -90,6 +108,16 @@ test('convert SSH ECDSA-384 sig and verify', function(t) {
 	var key = sshpk.parseKey(
 	    fs.readFileSync(path.join(testDir, 'id_ecdsa')), 'pem');
 	var sig = sshpk.parseSignature(ECDSA_SIG2_SSH, 'ecdsa', 'ssh');
+	var s = key.createVerify();
+	s.update('foobar');
+	t.ok(s.verify(sig));
+	t.end();
+});
+
+test('convert full wire SSH ECDSA-384 sig and verify', function(t) {
+	var key = sshpk.parseKey(
+	    fs.readFileSync(path.join(testDir, 'id_ecdsa')), 'pem');
+	var sig = sshpk.parseSignature(ECDSA_SIG3_SSH, 'ecdsa', 'ssh');
 	var s = key.createVerify();
 	s.update('foobar');
 	t.ok(s.verify(sig));
