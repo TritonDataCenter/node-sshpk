@@ -1,18 +1,18 @@
 sshpk
 =========
 
-Parse, convert, fingerprint and use SSH public keys in pure node -- no
-`ssh-keygen` or other external dependencies.
+Parse, convert, fingerprint and use SSH keys (both public and private) in pure
+node -- no `ssh-keygen` or other external dependencies.
 
-Supports RSA, DSA and ECDSA (nistp-\*) key types. Can also parse SSH private
-keys in PEM format and output their public half.
+Supports RSA, DSA and ECDSA (nistp-\*) key types, in PEM (PKCS#1, PKCS#8) and
+OpenSSH formats.
 
 This library has been extracted from
 [`node-http-signature`](https://github.com/joyent/node-http-signature)
 (work by [Mark Cavage](https://github.com/mcavage) and
 [Dave Eddy](https://github.com/bahamas10)) and
 [`node-ssh-fingerprint`](https://github.com/bahamas10/node-ssh-fingerprint)
-(work by Dave Eddy), with some additions (including ECDSA support) by
+(work by Dave Eddy), with additions (including ECDSA support) by
 [Alex Wilson](https://github.com/arekinath).
 
 Install
@@ -57,27 +57,40 @@ old-style fingerprint => a0:c8:ad:6c:32:9a:32:fa:59:cc:a9:8c:0a:0d:6e:bd
 More examples: converting between formats:
 
 ```js
-/* Read in a PEM public key (PKCS#8) */
+/* Read in a PEM public key */
 var keyPem = fs.readFileSync('id_rsa.pem');
 var key = sshpk.parseKey(keyPem, 'pem');
 
-
-/* Read in an OpenSSH/PEM *private* key, will load just the public half */
-var keyPriv = fs.readFileSync('id_ecdsa');
-var key = sshpk.parseKey(keyPriv, 'pem');
-
-
 /* Convert to PEM PKCS#8 public key format */
-var pemBuf = key.toBuffer('pem');
+var pemBuf = key.toBuffer('pkcs8');
 
 /* Convert to SSH public key format (and return as a string) */
 var sshKey = key.toString('ssh');
+```
 
+Signing and verifying:
+
+```js
+/* Read in an OpenSSH/PEM *private* key */
+var keyPriv = fs.readFileSync('id_ecdsa');
+var key = sshpk.parsePrivateKey(keyPriv, 'pem');
+
+var data = 'some data';
+
+/* Sign some data with the key */
+var s = key.createSign('sha1');
+s.update(data);
+var signature = s.sign();
+
+/* Now load the public key (could also use just key.toPublic()) */
+var keyPub = fs.readFileSync('id_ecdsa.pub');
+key = sshpk.parseKey(keyPub, 'ssh');
 
 /* Make a crypto.Verifier with this key */
 var v = key.createVerify('sha1');
-v.update('some data here');
+v.update(data);
 var valid = v.verify(signature);
+/* => true! */
 ```
 
 Matching fingerprints with keys:
@@ -96,6 +109,8 @@ keys.forEach(function (key) {
 Usage
 -----
 
+## Public keys
+
 ### `parseKey(data[, format = 'ssh'[, name]])`
 
 Parses a key from a given data format and returns a new `Key` object.
@@ -105,7 +120,8 @@ Parameters
 - `data` -- Either a Buffer or String, containing the key
 - `format` -- String name of format to use, valid options are `pem` (supports
               both PKCS#1 and PKCS#8), `rfc4253` (raw OpenSSH wire format, as
-              returned by `ssh-agent`, for example), `ssh` (OpenSSH format)
+              returned by `ssh-agent`, for example), `ssh` (OpenSSH format),
+              `pkcs1`, `pkcs8`
 - `name` -- Optional name for the key being parsed (eg. the filename that
             was opened). Used to generate Error messages
 
@@ -170,6 +186,83 @@ Parameters
 - `format` -- optional String, name of format to interpret given String with.
               Not valid if `signature` is a Signature or Buffer.
 
+## Private keys
+
+### `parsePrivateKey(data[, format = 'pem'[, name]])`
+
+Parses a private key from a given data format and returns a new
+`PrivateKey` object.
+
+Parameters
+
+- `data` -- Either a Buffer or String, containing the key
+- `format` -- String name of format to use, valid options are `pem` (supports
+              both PKCS#1 and PKCS#8), `rfc4253` (raw OpenSSH wire format, as
+              returned by `ssh-agent`, for example), `pkcs1`, `pkcs8`
+- `name` -- Optional name for the key being parsed (eg. the filename that
+            was opened). Used to generate Error messages
+
+### `PrivateKey#type`
+
+String, the type of key. Valid options are `rsa`, `dsa`, `ecdsa`.
+
+### `PrivateKey#size`
+
+Integer, "size" of the key in bits. For RSA/DSA this is the size of the modulus;
+for ECDSA this is the bit size of the curve in use.
+
+### `PrivateKey#curve`
+
+Only present if `this.type === 'ecdsa'`, string containing the name of the
+named curve used with this key. Possible values include `nistp256`, `nistp384`
+and `nistp521`.
+
+### `PrivateKey#toBuffer([format = 'pkcs1'])`
+
+Convert the key into a given data format and return the serialized key as
+a Buffer.
+
+Parameters
+
+- `format` -- String name of format to use, valid options are `pkcs8`, `pkcs1`,
+              `rfc4253`, `pem` (same as `pkcs1`)
+
+### `PrivateKey#toString([format = 'pkcs1'])`
+
+Same as `this.toBuffer(format).toString()`.
+
+### `PrivateKey#toPublic()`
+
+Extract just the public part of this private key, and return it as a `Key`
+object.
+
+### `PrivateKey#fingerprint([algorithm = 'sha256'])`
+
+Same as `this.toPublic().fingerprint()`.
+
+### `PrivateKey#createVerify([hashAlgorithm])`
+
+Same as `this.toPublic().createVerify()`.
+
+### `PrivateKey#createSign([hashAlgorithm])`
+
+Creates a `crypto.Sign` specialized to use this PrivateKey (and the correct
+key algorithm to match it). The returned Signer has the same API as a regular
+one, except that the `sign()` function takes no arguments, and returns a
+`Signature` object.
+
+Parameters
+
+- `hashAlgorithm` -- optional String name of hash algorithm to use, any
+                     supported by OpenSSL are valid, usually including
+                     `sha1`, `sha256`.
+
+`v.sign()` Parameters
+
+- none
+
+## Fingerprints
+
 ### `parseFingerprint(fingerprint[, algorithms])`
 
 Pre-parses a fingerprint, creating a `Fingerprint` object that can be used to
@@ -201,22 +294,24 @@ Parameters
 
 - `key` -- a `Key` object, the key to match this fingerprint against
 
+## Signatures
+
 ### `parseSignature(signature, algorithm, format)`
 
-Parses a signature in a given format, createing a `Signature` object. Useful
-for converting between the SSH and ASN.1 (PKCS/OpenSSL) signature formats for
-DSA and ECDSA.
+Parses a signature in a given format, creating a `Signature` object. Useful
+for converting between the SSH and ASN.1 (PKCS/OpenSSL) signature formats, and
+also returned as output from `PrivateKey#createSign().sign()`.
 
 A Signature object can also be passed to a verifier produced by
-`Key#createVerify()` and it will automatically be converted into the correct
-format for verification.
+`Key#createVerify()` and it will automatically be converted internally into the
+correct format for verification.
 
 Parameters
 
 - `signature` -- a Buffer (binary) or String (base64), data of the actual
                  signature in the given format
 - `algorithm` -- a String, name of the algorithm to be used, possible values
-                 are `rsa`, `dsa` and `ecdsa`
+                 are `rsa`, `dsa`, `ecdsa`
 - `format` -- a String, either `asn1` or `ssh`
 
 ### `Signature#toBuffer([format = 'asn1'])`
@@ -266,3 +361,9 @@ Properties
 - `keyName` -- `name` that was given to `Key#parse`
 - `format` -- the `format` that was trying to parse the key
 - `innerErr` -- the inner Error thrown by the format parser
+
+Friends of sshpk
+----------------
+
+ * [`sshpk-agent`](https://github.com/arekinath/node-sshpk-agent) is a library
+   for speaking the `ssh-agent` protocol from node.js, which uses `sshpk`
