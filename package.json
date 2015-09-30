@@ -37,6 +37,9 @@
     "asn1": "0.2.2",
     "assert-plus": "0.1.5"
   },
+  "optionalDependencies": {
+    "big-integer": ">=1.6.0 <2.0.0"
+  },
   "devDependencies": {
     "tape": ">=3.5.0 <4.0.0",
     "benchmark": ">=1.0.0 <2.0.0"
