@@ -45,7 +45,7 @@ test('openssl version', function (t) {
 			});
 			if (ver[0] > 1 || (ver[0] == 1 &&
 			    (ver[1] > 0 || (ver[1] == 0 &&
-			    ver[2] >= 2)))) {
+			    ver[2] >= 1)))) {
 				/* we're ok */
 				genTests();
 			}
