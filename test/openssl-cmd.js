@@ -40,7 +40,9 @@ test('openssl version', function (t) {
 
 		var parts = verLine.split(' ');
 		if (parts[0] === 'OpenSSL') {
-			var ver = parts[1].split('.');
+			var ver = parts[1].split('.').map(function (p) {
+				return (parseInt(p));
+			});
 			if (ver[0] > 1 || (ver[0] == 1 &&
 			    (ver[1] > 0 || (ver[1] == 0 &&
 			    ver[2] >= 2)))) {
