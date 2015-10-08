@@ -4,8 +4,8 @@ sshpk
 Parse, convert, fingerprint and use SSH keys (both public and private) in pure
 node -- no `ssh-keygen` or other external dependencies.
 
-Supports RSA, DSA and ECDSA (nistp-\*) key types, in PEM (PKCS#1, PKCS#8) and
-OpenSSH formats.
+Supports RSA, DSA, ECDSA (nistp-\*) and ED25519 key types, in PEM (PKCS#1, 
+PKCS#8) and OpenSSH formats.
 
 This library has been extracted from
 [`node-http-signature`](https://github.com/joyent/node-http-signature)
@@ -111,17 +111,21 @@ Usage
 
 ## Public keys
 
-### `parseKey(data[, format = 'ssh'[, name]])`
+### `parseKey(data[, format = 'auto'[, name]])`
 
 Parses a key from a given data format and returns a new `Key` object.
 
 Parameters
 
 - `data` -- Either a Buffer or String, containing the key
-- `format` -- String name of format to use, valid options are `pem` (supports
-              both PKCS#1 and PKCS#8), `rfc4253` (raw OpenSSH wire format, as
-              returned by `ssh-agent`, for example), `ssh` (OpenSSH format),
-              `pkcs1`, `pkcs8`
+- `format` -- String name of format to use, valid options are:
+  - `auto`: choose automatically from all below
+  - `pem`: supports both PKCS#1 and PKCS#8
+  - `ssh`: standard OpenSSH format,
+  - `pkcs1`, `pkcs8`: variants of `pem`
+  - `rfc4253`: raw OpenSSH wire format
+  - `openssh`: new post-OpenSSH 6.5 internal format, produced by 
+               `ssh-keygen -o`
 - `name` -- Optional name for the key being parsed (eg. the filename that
             was opened). Used to generate Error messages
 
@@ -151,8 +155,7 @@ a Buffer.
 
 Parameters
 
-- `format` -- String name of format to use, valid options are `pem`, `rfc4253`,
-              `ssh`
+- `format` -- String name of format to use, for valid options see `parseKey()`
 
 ### `Key#toString([format = 'ssh])`
 
@@ -188,7 +191,7 @@ Parameters
 
 ## Private keys
 
-### `parsePrivateKey(data[, format = 'pem'[, name]])`
+### `parsePrivateKey(data[, format = 'auto'[, name]])`
 
 Parses a private key from a given data format and returns a new
 `PrivateKey` object.
@@ -196,9 +199,13 @@ Parses a private key from a given data format and returns a new
 Parameters
 
 - `data` -- Either a Buffer or String, containing the key
-- `format` -- String name of format to use, valid options are `pem` (supports
-              both PKCS#1 and PKCS#8), `rfc4253` (raw OpenSSH wire format, as
-              returned by `ssh-agent`, for example), `pkcs1`, `pkcs8`
+- `format` -- String name of format to use, valid options are:
+  - `auto`: choose automatically from all below
+  - `pem`: supports both PKCS#1 and PKCS#8
+  - `ssh`, `openssh`: new post-OpenSSH 6.5 internal format, produced by 
+                      `ssh-keygen -o`
+  - `pkcs1`, `pkcs8`: variants of `pem`
+  - `rfc4253`: raw OpenSSH wire format
 - `name` -- Optional name for the key being parsed (eg. the filename that
             was opened). Used to generate Error messages
 
@@ -224,8 +231,9 @@ a Buffer.
 
 Parameters
 
-- `format` -- String name of format to use, valid options are `pkcs8`, `pkcs1`,
-              `rfc4253`, `pem` (same as `pkcs1`)
+- `format` -- String name of format to use, valid options are listed under 
+              `parsePrivateKey`. Note that ED25519 keys default to `openssh`
+              format instead (as they have no `pkcs1` representation).
 
 ### `PrivateKey#toString([format = 'pkcs1'])`
 
