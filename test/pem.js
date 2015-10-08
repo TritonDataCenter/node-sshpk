@@ -141,6 +141,13 @@ test('1024b pem to rsa ssh key', function(t) {
 	t.end();
 });
 
+test('1024b pem with auto', function(t) {
+	var k = sshpk.parseKey(PEM_1024, 'auto');
+	k.comment = 'mark@foo.local';
+	t.equal(k.toString('ssh'), SSH_1024);
+	t.end();
+});
+
 test('2048b pem to rsa ssh key', function(t) {
 	var k = sshpk.parseKey(PEM_2048, 'pem');
 	k.comment = 'mark@bluesnoop.local';
@@ -186,8 +193,20 @@ test('1024b dsa ssh key', function(t) {
 	t.end();
 });
 
+test('1024b dsa ssh key with auto', function(t) {
+	var k = sshpk.parseKey(DSA_1024, 'auto');
+	t.equal(k.toString('pem'), DSA_1024_PEM);
+	t.end();
+});
+
 test('ed25519 ssh key', function(t) {
 	var k = sshpk.parseKey(ED_SSH, 'ssh');
+	t.equal(k.type, 'ed25519');
+	t.end();
+});
+
+test('ed25519 ssh key with auto', function(t) {
+	var k = sshpk.parseKey(ED_SSH, 'auto');
 	t.equal(k.type, 'ed25519');
 	t.end();
 });
