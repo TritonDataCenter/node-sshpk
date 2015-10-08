@@ -15,6 +15,8 @@ var ID_ECDSA_FP = sshpk.parseFingerprint(
     'SHA256:e34c67Npv31uMtfVUEBJln5aOcJugzDaYGsj1Uph5DE');
 var ID_ECDSA2_FP = sshpk.parseFingerprint(
     'SHA256:Kyu0EMqH8fzfp9RXKJ6kmsk9qKGBqVRtlOuk6bXfCEU');
+var ID_ED25519_FP = sshpk.parseFingerprint(
+    'SHA256:2UeFLCUKw2lvd8O1zfINNVzE0kUcu2HJHXQr/TGHt60');
 
 test('PrivateKey load RSA key', function (t) {
 	var keyPem = fs.readFileSync(path.join(testDir, 'id_rsa'));
@@ -49,6 +51,19 @@ test('PrivateKey load ECDSA 256 key', function (t) {
 	t.strictEqual(key.type, 'ecdsa');
 	t.strictEqual(key.size, 256);
 	t.ok(ID_ECDSA2_FP.matches(key));
+	t.end();
+});
+
+test('PrivateKey load ED25519 256 key', function (t) {
+	var keyPem = fs.readFileSync(path.join(testDir, 'id_ed25519'));
+	var key = sshpk.parsePrivateKey(keyPem, 'pem');
+	t.strictEqual(key.type, 'ed25519');
+	t.strictEqual(key.size, 256);
+	t.ok(ID_ED25519_FP.matches(key));
+
+	keyPem = key.toBuffer('openssh');
+	var key2 = sshpk.parsePrivateKey(keyPem, 'openssh');
+	t.ok(ID_ED25519_FP.matches(key2));
 	t.end();
 });
 

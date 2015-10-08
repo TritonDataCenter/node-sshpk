@@ -129,6 +129,9 @@ var ENC_PRIVATE = '-----BEGIN RSA PRIVATE KEY-----\n' +
 	'z8/ApT6HCd3EnH9VHEtXp116ZVk4PhRiiOMY/ek2uhFK57wgMxOrRM3OgODrd+5A\n' +
 	'-----END RSA PRIVATE KEY-----\n';
 
+var ED_SSH = 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEi0pkfPe/+kbmnTSH0mfr0J4' +
+	'Fq7M7bshFAKB6uCyLDm foo@bar';
+
 ///--- Tests
 
 test('1024b pem to rsa ssh key', function(t) {
@@ -180,6 +183,12 @@ test('4096b rsa ssh key', function(t) {
 test('1024b dsa ssh key', function(t) {
 	var k = sshpk.parseKey(DSA_1024, 'ssh');
 	t.equal(k.toString('pem'), DSA_1024_PEM);
+	t.end();
+});
+
+test('ed25519 ssh key', function(t) {
+	var k = sshpk.parseKey(ED_SSH, 'ssh');
+	t.equal(k.type, 'ed25519');
 	t.end();
 });
 
