@@ -40,6 +40,11 @@ var options = [
 		help: 'Print key metadata instead of converting'
 	},
 	{
+		names: ['comment', 'c'],
+		type: 'string',
+		help: 'Set key comment, if output format supports'
+	},
+	{
 		names: ['help', 'h'],
 		type: 'bool',
 		help: 'Shows this help text'
@@ -58,7 +63,7 @@ if (require.main === module) {
 		process.exit(1);
 	}
 
-	if (opts.help) {
+	if (opts.help || opts._args.length > 1) {
 		var help = parser.help({}).trimRight();
 		console.error('sshpk-conv: converts between SSH key formats\n');
 		console.error(help);
@@ -74,11 +79,20 @@ if (require.main === module) {
 	var inFile = process.stdin;
 	var inFileName = 'stdin';
 
+	var inFilePath;
+	if (opts.file) {
+		inFilePath = opts.file;
+	} else if (opts._args.length === 1) {
+		inFilePath = opts._args[0];
+	}
+
+	if (inFilePath)
+		inFileName = path.basename(inFilePath);
+
 	try {
-		if (opts.file) {
-			inFileName = path.basename(opts.file);
-			fs.accessSync(opts.file, fs.R_OK);
-			inFile = fs.createReadStream(opts.file);
+		if (inFilePath) {
+			fs.accessSync(inFilePath, fs.R_OK);
+			inFile = fs.createReadStream(inFilePath);
 		}
 	} catch (e) {
 		console.error('sshpk-conv: error opening input file' +
@@ -120,6 +134,9 @@ if (require.main === module) {
 			    e.name + ': ' + e.message);
 			process.exit(1);
 		}
+
+		if (opts.comment)
+			key.comment = opts.comment;
 
 		if (!opts.identify) {
 			fmt = undefined;
