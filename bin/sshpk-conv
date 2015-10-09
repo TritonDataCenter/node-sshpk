@@ -143,18 +143,25 @@ if (require.main === module) {
 			if (opts.outformat)
 				fmt = opts.outformat;
 			outFile.write(key.toBuffer(fmt));
-			process.exit(0);
+			if (fmt === 'ssh' ||
+			    (!opts.private && fmt === undefined))
+				outFile.write('\n');
+			outFile.once('drain', function () {
+				process.exit(0);
+			});
 		} else {
 			var kind = 'public';
 			if (key instanceof sshpk.PrivateKey)
 				kind = 'private';
-			console.log("%s: a %d bit %s %s key", inFileName,
+			console.log('%s: a %d bit %s %s key', inFileName,
 			    key.size, key.type.toUpperCase(), kind);
 			if (key.type === 'ecdsa')
-				console.log("ecdsa curve: %s", key.curve);
-			console.log("fingerprint:");
-			console.log(key.fingerprint().toString());
-			console.log(key.fingerprint('md5').toString());
+				console.log('ECDSA curve: %s', key.curve);
+			if (key.comment)
+				console.log('Comment: %s', key.comment);
+			console.log('Fingerprint:');
+			console.log('  ' + key.fingerprint().toString());
+			console.log('  ' + key.fingerprint('md5').toString());
 			process.exit(0);
 		}
 	});
