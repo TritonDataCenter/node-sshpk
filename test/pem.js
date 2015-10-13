@@ -189,6 +189,12 @@ test('1024b rsa ssh key with whitespace', function(t) {
 	t.end();
 });
 
+test('1024b rsa ssh key with whitespace auto', function(t) {
+	var k = sshpk.parseKey('\n\t    \n' + SSH_1024 + '\n', 'auto');
+	t.equal(k.toString('pem'), PEM_1024);
+	t.end();
+});
+
 test('1024b rsa ssh key with inner whitespace', function(t) {
 	var k = sshpk.parseKey(SSH_1024_WS, 'ssh');
 	t.equal(k.comment, 'mark@foo.local');
