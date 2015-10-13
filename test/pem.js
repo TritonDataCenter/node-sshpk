@@ -13,6 +13,10 @@ var SSH_1024_WS = 'ssh-rsa   AAAAB3NzaC1yc2EAAAABIwAAAIEAvad19ePSDckmgmo6Unqmd8'
 	'n2G7o1794VN3FazVhV09yooXIuUhA+7OmT7ChiHueayxSubgL2MrO/HvvF/GGVUs/t3e0u4' +
 	'5YwRC51EVhyDuqthVJWjKrYxgDMbHru8fc1oV51l0bKdmvmJWbA/VyeJvstoX+eiSGT3Jge' +
 	'egSMVtc=\tmark@foo.local\n';
+var SSH_1024_WSC = 'ssh-rsa   AAAAB3NzaC1yc2EAAAABIwAAAIEAvad19ePSDckmgmo6Unqmd8' +
+	'n2G7o1794VN3FazVhV09yooXIuUhA+7OmT7ChiHueayxSubgL2MrO/HvvF/GGVUs/t3e0u4' +
+	'5YwRC51EVhyDuqthVJWjKrYxgDMbHru8fc1oV51l0bKdmvmJWbA/VyeJvstoX+eiSGT3Jge' +
+	'egSMVtc=\tthis is a test comment\n';
 var PEM_1024 = '-----BEGIN PUBLIC KEY-----\n' +
 	'MIGdMA0GCSqGSIb3DQEBAQUAA4GLADCBhwKBgQC9p3X149INySaCajpSeqZ3yfYb\n' +
 	'ujXv3hU3cVrNWFXT3Kihci5SED7s6ZPsKGIe55rLFK5uAvYys78e+8X8YZVSz+3d\n' +
@@ -187,6 +191,14 @@ test('1024b rsa ssh key with whitespace', function(t) {
 
 test('1024b rsa ssh key with inner whitespace', function(t) {
 	var k = sshpk.parseKey(SSH_1024_WS, 'ssh');
+	t.equal(k.comment, 'mark@foo.local');
+	t.equal(k.toString('pem'), PEM_1024);
+	t.end();
+});
+
+test('1024b rsa ssh key with whitespace in comment', function(t) {
+	var k = sshpk.parseKey(SSH_1024_WSC, 'ssh');
+	t.equal(k.comment, 'this is a test comment');
 	t.equal(k.toString('pem'), PEM_1024);
 	t.end();
 });
