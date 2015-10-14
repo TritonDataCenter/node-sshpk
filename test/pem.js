@@ -149,6 +149,20 @@ test('1024b pem to rsa ssh key', function(t) {
 	t.end();
 });
 
+test('1024b pem trimmed', function(t) {
+	var k = sshpk.parseKey(PEM_1024.trim(), 'pem');
+	k.comment = 'mark@foo.local';
+	t.equal(k.toString('ssh'), SSH_1024);
+	t.end();
+});
+
+test('1024b pem with whitespace', function(t) {
+	var k = sshpk.parseKey('    \t\n  ' + PEM_1024 + '\n\n', 'pem');
+	k.comment = 'mark@foo.local';
+	t.equal(k.toString('ssh'), SSH_1024);
+	t.end();
+});
+
 test('1024b pem with auto', function(t) {
 	var k = sshpk.parseKey(PEM_1024, 'auto');
 	k.comment = 'mark@foo.local';
