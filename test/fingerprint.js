@@ -17,6 +17,13 @@ var SSH_2048 = 'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDrm0RN90tGM0/vcJgzJ4uW9' +
 	'SoBmUZAYAs+BqffNJHnIv1dexMmwdJdlZUeRK1Q1ES15gxx '+
 	'mark@foo.local';
 
+var SSH_MPNORM = 'ssh-rsa AAAAB3NzaC1yc2EAAAAEAAEAAQAAAQEAjb4zpS1Sl1m4szYzV/o' +
+	'GgHmYM5zI/yvWESgltLZVpSY6i3UDljPEPJSRdCiDnPl8qgyWtU4YbRwctmZUqA9DvKA' +
+	'GCcFSZ9OLkhBruPvKFi0Q+fgBEbR/tlLgXppi1EXEZwtUe97axsrp7DSrgbUYfNNRTtO' +
+	'eVnAlosM+KkER8xIqNWJ4aQEPBE2MA0YcC4PYT/KdD1ap8Xdxucsy9YPVrqKT0Zql0Dy' +
+	'SPt8hTmtJe78KjWsbAjaQvUbNg6lUxCGf6A/qym8smu9fGaYg2MUReVyhvxavBS64IV7' +
+	'FrKCE76+lDQfM4UQqszW+ZtSv9EwbUPF7SyAHzKB4HRSgBLDViw== token-key';
+
 var ED_SSH = 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEi0pkfPe/+kbmnTSH0mfr0J4' +
 	'Fq7M7bshFAKB6uCyLDm foo@bar';
 
@@ -24,6 +31,13 @@ test('fingerprint', function(t) {
 	var k = sshpk.parseKey(SSH_1024, 'ssh');
 	var fp = k.fingerprint('md5').toString();
 	t.equal(fp, '59:a4:61:0e:38:18:9f:0f:28:58:2a:27:f7:65:c5:87');
+	t.end();
+});
+
+test('fingerprint of key w/non-normalized mpint', function(t) {
+	var k = sshpk.parseKey(SSH_MPNORM, 'ssh');
+	var fp = k.fingerprint('sha256').toString();
+	t.equal(fp, 'SHA256:uOCmXUwfjh90NlLAxI9/vGG9ewUqcHlM5dYYFLJlZyc');
 	t.end();
 });
 
