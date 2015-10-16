@@ -5,3 +5,6 @@ node_js:
   - "0.8"
 before_install:
   - "make check"
+  - "pip install codecov"
+after_sucess:
+  - "codecov"
