@@ -9,6 +9,11 @@ var SSH_1024 = 'ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAIEAvad19ePSDckmgmo6Unqmd8' +
 	'5YwRC51EVhyDuqthVJWjKrYxgDMbHru8fc1oV51l0bKdmvmJWbA/VyeJvstoX+eiSGT3Jge' +
 	'egSMVtc= mark@foo.local';
 
+var SSH_1133 = 'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAAAjhShSqMBQvr+UtupcZj+l15' +
+    'W9LKZ5NDKlUY5af6sGQTaaKCg1Ag5tsi3TrQeAqykdrz7Ugu3BPkLlgk2NvqziX6FdFKjw' +
+    'hEEOsHPDFy5Z3ak4oYicHYZVg34pUYvps7dVbYE8D4Ba70txpMEgB3YIS+hUdqiHCIxZKW' +
+    'V0PCXTAjjhDyN7I9KI7F4bSAGNf0=';
+
 var PEM_2048 = '-----BEGIN PUBLIC KEY-----\n' +
 	'MIIBIDANBgkqhkiG9w0BAQEFAAOCAQ0AMIIBCAKCAQEAr+isTwMYqwCAcY0Yb2F0\n' +
 	'pF+/F4/wxGzcrLR2PrgoBXwjj/TnEA3tJ7v08Rru3lAd/O59B6TbXOsYbQ+2Syd8\n' +
@@ -38,6 +43,13 @@ test('rsa1024 key metadata', function(t) {
 	var k = sshpk.parseKey(SSH_1024, 'ssh');
 	t.equal(k.type, 'rsa');
 	t.equal(k.size, 1024);
+	t.end();
+});
+
+test('rsa1133 key metadata', function(t) {
+	var k = sshpk.parseKey(SSH_1133, 'ssh');
+	t.equal(k.type, 'rsa');
+	t.equal(k.size, 1133);
 	t.end();
 });
 
