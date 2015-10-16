@@ -18,7 +18,7 @@
 # Tools
 #
 NPM_EXEC        := npm
-TAP		:= ./node_modules/.bin/tap
+TAP		:= ./node_modules/.bin/tape
 
 #
 # Files
@@ -45,6 +45,12 @@ CLEAN_FILES += $(TAP) ./node_modules/tap
 .PHONY: test
 test: all
 	TAP=1 $(TAP) test/*.js
+
+.PHONY: coverage
+coverage: all
+	$(NPM_EXEC) install istanbul && \
+	    ./node_modules/.bin/istanbul cover \
+	    $(TAP) test/*.js
 
 include ./tools/mk/Makefile.deps
 include ./tools/mk/Makefile.node_deps.targ
