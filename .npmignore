@@ -5,3 +5,4 @@ Makefile
 node_modules
 test
 tools
+coverage
