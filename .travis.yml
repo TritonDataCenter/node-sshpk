@@ -8,4 +8,4 @@ node_js:
 before_install:
   - "make check"
 after_success:
-  - '[ "${TRAVIS_NODE_VERSION}" != "0.8" ] && npm install istanbul codecov.io && ./node_modules/.bin/istanbul cover ./node_modules/.bin/tape test/*.js && cat coverage/lcov.info | ./node_modules/.bin/codecov'
+  - '[ "${TRAVIS_NODE_VERSION}" != "0.8" ] && make codecovio'

@@ -52,6 +52,11 @@ coverage: all
 	    ./node_modules/.bin/istanbul cover \
 	    $(TAP) test/*.js
 
+.PHONY: codecovio
+codecovio: coverage
+	$(NPM_EXEC) install codecov.io && \
+	    ./node_modules/.bin/codecov < coverage/lcov.info
+
 include ./tools/mk/Makefile.deps
 include ./tools/mk/Makefile.node_deps.targ
 include ./tools/mk/Makefile.targ
