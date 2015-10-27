@@ -35,6 +35,11 @@ var options = [
 		help: 'Produce a private key as output'
 	},
 	{
+		names: ['derive', 'd'],
+		type: 'string',
+		help: 'Output a new key derived from this one, with given algo'
+	},
+	{
 		names: ['identify', 'i'],
 		type: 'bool',
 		help: 'Print key metadata instead of converting'
@@ -75,6 +80,13 @@ if (require.main === module) {
 		console.error('  - rfc4253        raw OpenSSH wire format');
 		process.exit(1);
 	}
+
+	/*
+	 * Key derivation can only be done on private keys, so use of the -d
+	 * option necessarily implies -p.
+	 */
+	if (opts.derive)
+		opts.private = true;
 
 	var inFile = process.stdin;
 	var inFileName = 'stdin';
@@ -134,6 +146,9 @@ if (require.main === module) {
 			    e.name + ': ' + e.message);
 			process.exit(1);
 		}
+
+		if (opts.derive)
+			key = key.derive(opts.derive);
 
 		if (opts.comment)
 			key.comment = opts.comment;
