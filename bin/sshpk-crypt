@@ -1,0 +1,406 @@
+#!/usr/bin/env node
+// -*- mode: js -*-
+// vim: set filetype=javascript :
+// Copyright 2015 Joyent, Inc.  All rights reserved.
+
+var fs = require('fs');
+var dashdash = require('dashdash');
+var sshpk = require('../lib/index');
+var path = require('path');
+var crypto = require('crypto');
+var assert = require('assert-plus');
+var getPassword = require('getpass').getPass;
+
+var options = [
+	{
+		names: ['input', 'f'],
+		type: 'string',
+		help: 'Input file name (default stdin)'
+	},
+	{
+		names: ['output', 'o'],
+		type: 'string',
+		help: 'Output file name (default stdout)'
+	},
+	{
+		names: ['key', 'i'],
+		type: 'string',
+		help: 'Path to the key to use'
+	},
+	{
+		names: ['encrypt', 'e'],
+		type: 'bool',
+		help: 'Encrypt the file'
+	},
+	{
+		names: ['decrypt', 'd'],
+		type: 'bool',
+		help: 'Decrypt the file'
+	},
+	{
+		names: ['help', 'h'],
+		type: 'bool',
+		help: 'Shows this help text'
+	}
+];
+
+if (require.main === module) {
+	var parser = dashdash.createParser({
+		options: options
+	});
+
+	try {
+		var opts = parser.parse(process.argv);
+	} catch (e) {
+		console.error('sshpk-conv: error: %s', e.message);
+		process.exit(1);
+	}
+
+	if (opts.help || opts._args.length > 1) {
+		var help = parser.help({}).trimRight();
+		console.error('sshpk-crypt: encryption using SSH keys\n');
+		console.error(help);
+		process.exit(1);
+	}
+
+	if (opts.encrypt && opts.decrypt) {
+		console.error('sshpk-crypt: cannot encrypt and decrypt at ' +
+		    'the same time');
+		process.exit(1);
+	}
+
+	if (!opts.encrypt && !opts.decrypt) {
+		console.error('sshpk-crypt: must specify either -e (encrypt) ' +
+		    'or -d (decrypt)');
+		process.exit(1);
+	}
+
+	var keys = [];
+
+	var suffix = opts.encrypt ? '.pub' : '';
+	var keyFiles = [];
+	if (opts.key) {
+		keyFiles.push(opts.key);
+	} else {
+		keyFiles = [
+			path.join(process.env['HOME'], '.ssh', 'id_ed25519' + suffix),
+			path.join(process.env['HOME'], '.ssh', 'id_ecdsa' + suffix),
+			path.join(process.env['HOME'], '.ssh', 'id_rsa' + suffix),
+			path.join(process.env['HOME'], '.ssh', 'id_dsa' + suffix)
+		];
+	}
+
+	var f;
+	if (opts.encrypt)
+		f = sshpk.parseKey;
+	else if (opts.decrypt)
+		f = sshpk.parsePrivateKey;
+
+	var key;
+	var queue = [];
+	for (var i = 0; i < keyFiles.length; ++i) {
+		if (!fs.existsSync(keyFiles[i]))
+			continue;
+		queue.push({ filename: keyFiles[i] });
+	}
+
+	function nextKey() {
+		var job = queue.shift();
+		if (job === undefined) {
+			afterKeys();
+			return;
+		}
+		tryKey(job);
+	}
+
+	nextKey();
+}
+
+function tryKey(parseOpts) {
+	var fname = parseOpts.filename;
+	try {
+		var keyData = fs.readFileSync(fname);
+		var k = f(keyData, 'auto', parseOpts);
+		keys.push(k);
+	} catch (e) {
+		if (e.name === 'KeyEncryptedError' && fname === opts.key) {
+			getPassword(function (err, pw) {
+				if (err) {
+					console.log('sshpk-crypt: ' +
+					    err.name + ': ' + err.message);
+					process.exit(1);
+				}
+				parseOpts.passphrase = pw;
+				tryKey(parseOpts);
+			});
+			return;
+		}
+		if (fname === opts.key) {
+			console.error('sshpk-crypt: error ' +
+			    'opening key file :' + e.name +
+			    ': ' + e.message);
+			process.exit(1);
+		}
+	}
+	nextKey();
+}
+
+function afterKeys() {
+	if (keys.length < 1) {
+		console.error('sshpk-crypt: must specify a key to use');
+		process.exit(1);
+	}
+	key = keys[0];
+
+	var inFile = process.stdin;
+	var inFileName = 'stdin';
+
+	var inFilePath;
+	if (opts.input) {
+		inFilePath = opts.input;
+	} else if (opts._args.length === 1) {
+		inFilePath = opts._args[0];
+	}
+
+	if (inFilePath)
+		inFileName = path.basename(inFilePath);
+
+	try {
+		if (inFilePath) {
+			fs.accessSync(inFilePath, fs.R_OK);
+			inFile = fs.createReadStream(inFilePath);
+		}
+	} catch (e) {
+		console.error('sshpk-crypt: error opening input file' +
+		     ': ' + e.name + ': ' + e.message);
+		process.exit(1);
+	}
+
+	var outFile = process.stdout;
+
+	try {
+		if (opts.output) {
+			fs.accessSync(path.dirname(opts.output), fs.W_OK);
+			if (fs.existsSync(opts.output)) {
+				fs.unlinkSync(opts.output);
+			}
+			outFile = fs.createWriteStream(opts.output);
+		}
+	} catch (e) {
+		console.error('sshpk-crypt: error opening output file' +
+		    ': ' + e.name + ': ' + e.message);
+		process.exit(1);
+	}
+
+	if (opts.encrypt) {
+		var aesKey, aesIv;
+		var blob = {};
+
+		blob.fingerprint = key.fingerprint('sha256').toString();
+		blob.algo = key.type;
+		blob.symmetricAlgo = 'aes-128-ctr';
+		blob.hmacAlgo = 'sha512';
+		var info = cipherInfo(blob.symmetricAlgo);
+
+		if (key.type === 'rsa') {
+			aesKey = crypto.randomBytes(info.keyLength);
+			blob.key = crypto.publicEncrypt(
+			    key.toBuffer('pkcs8'),
+			    aesKey).toString('base64');
+
+		} else if (['dsa', 'ecdsa', 'curve25519'].
+		    indexOf(key.type) !== -1) {
+		    	var dh = key.createDH();
+			var ephemeral = dh.generateKeys();
+
+			var secret = dh.computeSecret(key);
+			aesKey = crypto.createHash('sha512').
+			    update(secret).digest();
+			blob.ephemeral = ephemeral.toPublic().toString('ssh');
+
+		} else if (key.type === 'ed25519') {
+			console.error('sshpk-crypt: ed25519 keys cannot be ' +
+			    'directly used for encryption, but you can derive' +
+			    ' a Curve25519 key from it using sshpk-conv -d');
+			process.exit(1);
+
+		} else {
+			console.error('sshpk-crypt: unsupported key type: ' +
+			    key.type);
+			process.exit(1);
+		}
+
+		aesKey = aesKey.slice(0, info.keyLength);
+		aesIv = crypto.randomBytes(info.ivLength);
+		blob.iv = aesIv.toString('base64');
+
+		var cryptStream = crypto.createCipheriv(
+		    blob.symmetricAlgo, aesKey, aesIv);
+
+		var hmacStream = crypto.createHmac('sha512', aesKey);
+
+		outFile.write(JSON.stringify(blob) + '\n');
+		inFile.on('readable', function () {
+			var chunk;
+			while ((chunk = inFile.read()) !== null) {
+				cryptStream.write(chunk);
+				hmacStream.update(chunk);
+			}
+		});
+		cryptStream.on('readable', function () {
+			var chunk;
+			while ((chunk = cryptStream.read()) !== null) {
+				outFile.write(chunk);
+			}
+		});
+		inFile.on('end', function () {
+			cryptStream.end();
+		});
+		cryptStream.on('end', function () {
+			outFile.write(hmacStream.digest());
+			if (opts.output)
+				outFile.end();
+		});
+
+	} else if (opts.decrypt) {
+		var buf = new Buffer(0);
+		function checkHeader() {
+			var data;
+			while ((data = inFile.read())) {
+				buf = Buffer.concat([buf, data]);
+				var parts = buf.toString('binary').split('\n');
+				if (parts.length > 1) {
+					var head = JSON.parse(parts[0]);
+					var len = parts[0].length + 1;
+					var rem = buf.slice(len);
+					inFile.unshift(rem);
+
+					setupDecrypt(head);
+					return;
+				}
+			}
+			inFile.once('readable', checkHeader);
+		}
+		inFile.once('readable', checkHeader);
+	}
+
+	function setupDecrypt(header) {
+		var fp = sshpk.parseFingerprint(header.fingerprint);
+		key = undefined;
+		for (i = 0; i < keys.length; ++i) {
+			if (keys[i].type === header.algo &&
+			    fp.matches(keys[i])) {
+				key = keys[i];
+				break;
+			}
+		}
+		if (key === undefined) {
+			console.error('sshpk-crypt: failed to find ' +
+			    header.algo + ' key for decrypting file\n' +
+			    'fingerprint = ' + header.fingerprint);
+			process.exit(1);
+		}
+
+		var aesKey, aesIv;
+		var info = cipherInfo(header.symmetricAlgo);
+
+		if (key.type === 'rsa') {
+			aesKey = crypto.privateDecrypt(
+			    key.toBuffer('pkcs1'),
+			    new Buffer(header.key, 'base64'));
+
+		} else if (['dsa', 'ecdsa', 'curve25519'].
+		    indexOf(key.type) !== -1) {
+			var ephemeral = sshpk.parseKey(header.ephemeral);
+			var dh = key.createDH();
+			var secret = dh.computeSecret(ephemeral);
+			aesKey = crypto.createHash('sha512').
+			    update(secret).digest();
+
+		} else {
+			console.error('sshpk-crypt: unsupported key type: ' +
+			    key.type);
+			process.exit(1);
+		}
+
+		aesKey = aesKey.slice(0, info.keyLength);
+		aesIv = new Buffer(header.iv, 'base64');
+
+		var cryptStream = crypto.createDecipheriv(
+		    header.symmetricAlgo, aesKey, aesIv);
+
+		var hmacStream, hmacSize, hmac;
+		if (header.hmacAlgo) {
+			var hmtest = crypto.createHmac(header.hmacAlgo, aesKey);
+			hmtest.update('test');
+			hmacSize = hmtest.digest().length;
+
+			hmacStream = crypto.createHmac(header.hmacAlgo, aesKey);
+		}
+
+		var lastChunk;
+		inFile.on('readable', onInFileReadable);
+		onInFileReadable();
+		function onInFileReadable() {
+			var chunk;
+			while ((chunk = inFile.read()) !== null) {
+				if (lastChunk)
+					cryptStream.write(lastChunk);
+				lastChunk = chunk;
+			}
+		}
+
+		cryptStream.on('readable', function () {
+			var chunk;
+			while ((chunk = cryptStream.read()) !== null) {
+				outFile.write(chunk);
+				if (hmacStream)
+					hmacStream.update(chunk);
+			}
+		});
+		inFile.on('end', function () {
+			if (hmacStream) {
+				assert.ok(lastChunk.length >= hmacSize);
+				hmac = lastChunk.slice(
+				    lastChunk.length - hmacSize,
+				    lastChunk.length);
+				lastChunk = lastChunk.slice(0,
+				    lastChunk.length - hmacSize);
+			}
+			cryptStream.end(lastChunk);
+		});
+		cryptStream.on('end', function () {
+			if (!hmacStream) {
+				if (opts.output)
+					outFile.end();
+				return;
+			}
+			var theirHmac = hmac.toString('base64');
+			var ourHmac = hmacStream.digest().toString('base64');
+			if (theirHmac !== ourHmac) {
+				console.error('\nIncluded HMAC: ' + theirHmac);
+				console.error('Calculatd HMAC: ' + ourHmac);
+				console.error('HMAC validation failed!');
+				console.error(
+				    '!!! Do not use or trust any output !!!');
+				process.exit(255);
+			}
+			if (opts.output)
+				outFile.end();
+		});
+	}
+
+	function cipherInfo(cipher) {
+		cipher = cipher.toLowerCase();
+		var m, info = {};
+		if ((m = cipher.match(/^aes-([0-9]+)/))) {
+			info.ivLength = 128 / 8;
+			info.keyLength = parseInt(m[1], 10) / 8;
+		} else {
+			console.error('sshpk-crypt: unsupported cipher: ' +
+			    cipher);
+			process.exit(1);
+		}
+		return (info);
+	}
+}
