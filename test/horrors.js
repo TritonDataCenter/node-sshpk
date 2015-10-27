@@ -13,6 +13,7 @@ test('lost whitespace before comment', function (t) {
 	t.strictEqual(k.type, 'rsa');
 	t.strictEqual(k.fingerprint('sha256').toString(),
 	    'SHA256:n0akL6ACGYcTARqym7TL4DStmNFpxMkSlFwuCfqNP9M');
+	t.strictEqual(k.comment, 'mark@foo.local');
 	t.end();
 });
 
@@ -25,6 +26,7 @@ test('lost whitespace and equals before comment', function (t) {
 	t.strictEqual(k.type, 'rsa');
 	t.strictEqual(k.fingerprint('sha256').toString(),
 	    'SHA256:n0akL6ACGYcTARqym7TL4DStmNFpxMkSlFwuCfqNP9M');
+	t.strictEqual(k.comment, 'mark@foo.local');
 	t.end();
 });
 
@@ -39,6 +41,7 @@ test('lost whitespace, no equals', function (t) {
 	t.strictEqual(k.type, 'rsa');
 	t.strictEqual(k.fingerprint('sha256').toString(),
 	    'SHA256:+lMZah1Mq1FnDRtPpiz6kxpx7nrqQe5okKakQOvLEZE');
+	t.strictEqual(k.comment, 'alex@Alexs-MacBook-Pro-7.local');
 	t.end();
 });
 
@@ -64,6 +67,7 @@ test('newlines everywhere', function (t) {
 	t.strictEqual(k.type, 'rsa');
 	t.strictEqual(k.fingerprint('sha256').toString(),
 	    'SHA256:+lMZah1Mq1FnDRtPpiz6kxpx7nrqQe5okKakQOvLEZE');
+	t.strictEqual(k.comment, 'alex@Alexs-MacBook-Pro-7.local');
 	t.end();
 });
 
@@ -78,6 +82,7 @@ test('line continuations, key from hell', function (t) {
 	t.strictEqual(k.type, 'rsa');
 	t.strictEqual(k.fingerprint('sha256').toString(),
 	    'SHA256:+lMZah1Mq1FnDRtPpiz6kxpx7nrqQe5okKakQOvLEZE');
+	t.strictEqual(k.comment, 'alex@Alexs-MacBook-Pro-7.local');
 	t.end();
 });
 
@@ -89,6 +94,7 @@ test('line broken in the middle, no comment', function (t) {
 	t.strictEqual(k.type, 'ecdsa');
 	t.strictEqual(k.fingerprint('sha256').toString(),
 	    'SHA256:Kyu0EMqH8fzfp9RXKJ6kmsk9qKGBqVRtlOuk6bXfCEU');
+	t.strictEqual(k.comment, '(unnamed)');
 	t.end();
 });
 
