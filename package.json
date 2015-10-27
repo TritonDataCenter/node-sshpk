@@ -44,6 +44,7 @@
   },
   "optionalDependencies": {
     "jsbn": ">=0.0.0 <1.0.0",
+    "tweetnacl": ">=0.13.0 <1.0.0",
     "jodid25519": ">=1.0.0 <2.0.0"
   },
   "devDependencies": {
