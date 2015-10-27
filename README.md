@@ -269,6 +269,29 @@ Parameters
 
 - none
 
+### `PrivateKey#derive(newType)`
+
+Derives a related key of type `newType` from this key. Currently this is
+only supported to change between `ed25519` and `curve25519` keys which are
+stored with the same private key (but usually distinct public keys in order
+to avoid degenerate keys that lead to a weak Diffie-Hellman exchange).
+
+Parameters
+
+- `newType` -- String, type of key to derive, either `ed25519` or `curve25519`
+
+### `PrivateKey#createDiffieHellman()`
+### `PrivateKey#createDH()`
+
+Creates a Diffie-Hellman key exchange object initialized with this key and all
+necessary parameters. This has the same API as a `crypto.DiffieHellman`
+instance, except that functions take `Key` and `PrivateKey` objects as
+arguments, and return them where indicated for.
+
+This is only valid for keys belonging to a cryptosystem that supports DHE
+or a close analogue (i.e. `dsa`, `ecdsa` and `curve25519` keys). An attempt
+to call this function on other keys will yield an `Error`.
+
 ## Fingerprints
 
 ### `parseFingerprint(fingerprint[, algorithms])`
