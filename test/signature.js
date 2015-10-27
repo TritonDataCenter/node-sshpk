@@ -12,8 +12,9 @@ var testDir = __dirname;
 var RSA_PEM = fs.readFileSync(path.join(testDir, 'id_rsa'));
 var DSA_PEM = fs.readFileSync(path.join(testDir, 'id_dsa'));
 var ECDSA_PEM = fs.readFileSync(path.join(testDir, 'id_ecdsa'));
+var ED25519_PEM = fs.readFileSync(path.join(testDir, 'id_ed25519'));
 
-var RSA_KEY, DSA_KEY, ECDSA_KEY;
+var RSA_KEY, DSA_KEY, ECDSA_KEY, ED25519_KEY;
 
 var DSA_SIG_ASN1 = 'MC0CFQCMhYhmerSHEK8h3Dd6DkWQggzY9QIUZ0sK0YNM9X3XfXo+jHiW' +
     'cp7D1zU=';
@@ -44,10 +45,14 @@ var ECDSA_SIG3_SSH = 'AAAAE2VjZHNhLXNoYTItbmlzdHAzODQAAABoAAAAMEfV+/DfXI5bYq' +
     'niW7H+KQSBQTqT4ChUtHfCd0AYH+QzwBf16R+H2JjAxuKzIhjjggAAADAlmHXEs07JDWzO+' +
     'cPy1k/gec3OQaKv7UOCcThjA5QQT840JgFbaoR7q71ZdU1Te0o=';
 
+var ED25519_SIG_SSH = 'AAAAC3NzaC1lZDI1NTE5AAAAQI9k67LtavkMlKZgw/vvlY9NfkVGU' +
+    '/Vln+nFWvs0Xc0Bkew6FTaR4IZo0q2C4bOsN9jlYSNu3CsMtlrjvQcR9w8=';
+
 test('setup', function(t) {
 	RSA_KEY = sshpk.parseKey(RSA_PEM, 'pem');
 	DSA_KEY = sshpk.parseKey(DSA_PEM, 'pem');
 	ECDSA_KEY = sshpk.parseKey(ECDSA_PEM, 'pem');
+	ED25519_KEY = sshpk.parsePrivateKey(ED25519_PEM, 'pem');
 	t.end();
 });
 
@@ -64,6 +69,22 @@ test('parse RSA sig in full wire SSH format and verify', function(t) {
 	var s = key.createVerify('sha1');
 	s.update('foobar');
 	t.ok(s.verify(sig));
+	t.end();
+});
+
+test('parse ED25519 sig in full wire SSH format and verify', function(t) {
+	var sig = sshpk.parseSignature(ED25519_SIG_SSH, 'ed25519', 'ssh');
+	var s = ED25519_KEY.createVerify();
+	s.update('foobar');
+	t.ok(s.verify(sig));
+	t.end();
+});
+
+test('sign with ED25519 key and convert to SSH format', function(t) {
+	var s = ED25519_KEY.createSign();
+	s.update('foobar');
+	var sig = s.sign();
+	t.strictEqual(sig.toString('ssh'), ED25519_SIG_SSH);
 	t.end();
 });
 

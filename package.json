@@ -43,7 +43,8 @@
     "dashdash": ">=1.10.1 <2.0.0"
   },
   "optionalDependencies": {
-    "big-integer": ">=1.6.0 <2.0.0"
+    "jsbn": ">=0.0.0 <1.0.0",
+    "jodid25519": ">=1.0.0 <2.0.0"
   },
   "devDependencies": {
     "tape": ">=3.5.0 <4.0.0",
