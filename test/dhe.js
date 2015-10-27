@@ -31,6 +31,67 @@ test('setup', function (t) {
 	t.end();
 });
 
+test('derive ed25519 -> curve25519', function (t) {
+	C_KEY = ED_KEY.derive('curve25519');
+	t.strictEqual(C_KEY.type, 'curve25519');
+	t.strictEqual(C_KEY.size, 256);
+	C_SSH = C_KEY.toBuffer('ssh');
+	C2_KEY = ED2_KEY.derive('curve25519');
+	t.end();
+});
+
+test('derive curve25519 -> ed25519', function (t) {
+	var k = sshpk.parsePrivateKey(C_SSH);
+	t.strictEqual(k.type, 'curve25519');
+	t.strictEqual(k.size, 256);
+	var k2 = k.derive('ed25519');
+	t.strictEqual(k2.type, 'ed25519');
+	t.ok(k2.fingerprint().matches(ED_KEY));
+	t.strictEqual(k2.part.r.toString('base64'),
+	    ED_KEY.part.r.toString('base64'));
+	t.end();
+});
+
+test('curve25519 shared secret', function (t) {
+	t.throws(function () {
+		ED_KEY.createDH();
+	});
+	var secret1 = C_KEY.createDH().computeSecret(C2_KEY.toPublic());
+	var secret2 = C2_KEY.createDH().computeSecret(C_KEY);
+	t.deepEqual(secret1, secret2);
+	t.end();
+});
+
+test('curve25519 generate ephemeral', function (t) {
+	var dh = C_KEY.toPublic().createDH();
+	t.throws(function () {
+		dh.computeSecret(C2_KEY.toPublic());
+	});
+	var ek = dh.generateKeys();
+	t.ok(ek instanceof sshpk.PrivateKey);
+	t.strictEqual(ek.type, 'curve25519');
+	t.end();
+});
+
+test('curve25519 validation', function (t) {
+	var dh = C_KEY.createDH();
+	t.throws(function () {
+		dh.computeSecret(EC_KEY.toPublic());
+	});
+	t.throws(function () {
+		dh.setKey(EC_KEY);
+	});
+	dh.setKey(C2_KEY);
+	t.strictEqual(dh.getKey().fingerprint().toString(),
+	    C2_KEY.fingerprint().toString());
+	t.end();
+});
+
+/* node 0.10 and earlier do not support DHE properly */
+if (process.version.match(/^v0\.10\./) ||
+    process.version.match(/^v0\.[0-9]\./))
+	return;
+
 test('dhe shared secret', function (t) {
 	var dh1 = DS_KEY.createDiffieHellman();
 	var secret1 = dh1.computeSecret(DS2_KEY.toPublic());
@@ -117,64 +178,8 @@ test('ecdhe reject diff curves', function (t) {
 	t.throws(function () {
 		dh2.setKey(EC_KEY);
 	});
-	t.end();
-});
 
-test('derive ed25519 -> curve25519', function (t) {
-	C_KEY = ED_KEY.derive('curve25519');
-	t.strictEqual(C_KEY.type, 'curve25519');
-	t.strictEqual(C_KEY.size, 256);
-	C_SSH = C_KEY.toBuffer('ssh');
-	C2_KEY = ED2_KEY.derive('curve25519');
-	t.end();
-});
-
-test('derive curve25519 -> ed25519', function (t) {
-	var k = sshpk.parsePrivateKey(C_SSH);
-	t.strictEqual(k.type, 'curve25519');
-	t.strictEqual(k.size, 256);
-	var k2 = k.derive('ed25519');
-	t.strictEqual(k2.type, 'ed25519');
-	t.ok(k2.fingerprint().matches(ED_KEY));
-	t.strictEqual(k2.part.r.toString('base64'),
-	    ED_KEY.part.r.toString('base64'));
-	t.end();
-});
-
-test('curve25519 shared secret', function (t) {
-	t.throws(function () {
-		ED_KEY.createDH();
-	});
-	var secret1 = C_KEY.createDH().computeSecret(C2_KEY.toPublic());
-	var secret2 = C2_KEY.createDH().computeSecret(C_KEY);
-	t.deepEqual(secret1, secret2);
-	t.end();
-});
-
-test('curve25519 generate ephemeral', function (t) {
-	var dh = C_KEY.toPublic().createDH();
-	t.throws(function () {
-		dh.computeSecret(C2_KEY.toPublic());
-	});
-	var ek = dh.generateKeys();
-	t.ok(ek instanceof sshpk.PrivateKey);
-	t.strictEqual(ek.type, 'curve25519');
-	t.end();
-});
-
-test('curve25519 validation', function (t) {
-	var dh = C_KEY.createDH();
-	t.throws(function () {
-		dh.computeSecret(EC_KEY.toPublic());
-	});
-	t.throws(function () {
-		dh.setKey(EC_KEY);
-	});
-	dh.setKey(C2_KEY);
-	t.strictEqual(dh.getKey().fingerprint().toString(),
-	    C2_KEY.fingerprint().toString());
-
-	var dh2 = EC_KEY.createDH();
+	dh2 = EC_KEY.createDH();
 	t.throws(function () {
 		dh2.setKey(C_KEY);
 	});
