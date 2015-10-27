@@ -30,7 +30,7 @@
     "url": "https://github.com/arekinath/node-sshpk/issues"
   },
   "engines": {
-    "node": ">=0.8.0"
+    "node": ">=0.10.0"
   },
   "directories": {
     "bin": "./bin",
