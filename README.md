@@ -189,6 +189,18 @@ Parameters
 - `format` -- optional String, name of format to interpret given String with.
               Not valid if `signature` is a Signature or Buffer.
 
+### `Key#createDiffieHellman()`
+### `Key#createDH()`
+
+Creates a Diffie-Hellman key exchange object initialized with this key and all
+necessary parameters. This has the same API as a `crypto.DiffieHellman`
+instance, except that functions take `Key` and `PrivateKey` objects as
+arguments, and return them where indicated for.
+
+This is only valid for keys belonging to a cryptosystem that supports DHE
+or a close analogue (i.e. `dsa`, `ecdsa` and `curve25519` keys). An attempt
+to call this function on other keys will yield an `Error`.
+
 ## Private keys
 
 ### `parsePrivateKey(data[, format = 'auto'[, name]])`
@@ -279,18 +291,6 @@ to avoid degenerate keys that lead to a weak Diffie-Hellman exchange).
 Parameters
 
 - `newType` -- String, type of key to derive, either `ed25519` or `curve25519`
-
-### `PrivateKey#createDiffieHellman()`
-### `PrivateKey#createDH()`
-
-Creates a Diffie-Hellman key exchange object initialized with this key and all
-necessary parameters. This has the same API as a `crypto.DiffieHellman`
-instance, except that functions take `Key` and `PrivateKey` objects as
-arguments, and return them where indicated for.
-
-This is only valid for keys belonging to a cryptosystem that supports DHE
-or a close analogue (i.e. `dsa`, `ecdsa` and `curve25519` keys). An attempt
-to call this function on other keys will yield an `Error`.
 
 ## Fingerprints
 

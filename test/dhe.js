@@ -62,7 +62,10 @@ test('dhe reject diff primes', function (t) {
 });
 
 test('dhe generate ephemeral', function (t) {
-	var dh = DS_KEY.createDH();
+	var dh = DS_KEY.toPublic().createDH();
+	t.throws(function () {
+		dh.computeSecret(DS2_KEY);
+	});
 	var ek = dh.generateKey();
 	t.ok(ek instanceof sshpk.PrivateKey);
 	t.strictEqual(ek.type, 'dsa');
@@ -149,8 +152,11 @@ test('curve25519 shared secret', function (t) {
 });
 
 test('curve25519 generate ephemeral', function (t) {
-	var dh = C_KEY.createDH();
-	var ek = dh.generateKey();
+	var dh = C_KEY.toPublic().createDH();
+	t.throws(function () {
+		dh.computeSecret(C2_KEY.toPublic());
+	});
+	var ek = dh.generateKeys();
 	t.ok(ek instanceof sshpk.PrivateKey);
 	t.strictEqual(ek.type, 'curve25519');
 	t.end();
