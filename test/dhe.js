@@ -87,6 +87,56 @@ test('curve25519 validation', function (t) {
 	t.end();
 });
 
+test('ecdhe shared secret', function (t) {
+	var dh1 = EC_KEY.createDH();
+	var secret1 = dh1.computeSecret(EC2_KEY.toPublic());
+	t.ok(Buffer.isBuffer(secret1));
+	t.deepEqual(secret1, new Buffer(
+	    'UoKiio/gnWj4BdV41YvoHu9yhjynGBmphZ1JFbpk30o=', 'base64'));
+
+	var dh2 = EC2_KEY.createDH();
+	var secret2 = dh2.computeSecret(EC_KEY.toPublic());
+	t.deepEqual(secret1, secret2);
+	t.end();
+});
+
+test('ecdhe generate ephemeral', function (t) {
+	var dh = EC_KEY.createDH();
+	var ek = dh.generateKey();
+	t.ok(ek instanceof sshpk.PrivateKey);
+	t.strictEqual(ek.type, 'ecdsa');
+	t.strictEqual(ek.curve, 'nistp256');
+
+	var secret1 = dh.computeSecret(EC_KEY);
+	var secret2 = EC_KEY.createDH().computeSecret(ek);
+	t.deepEqual(secret1, secret2);
+	t.end();
+});
+
+test('ecdhe reject diff curves', function (t) {
+	var dh = EC_KEY.createDH();
+	t.throws(function () {
+		dh.computeSecret(ECOUT_KEY.toPublic());
+	});
+	t.throws(function () {
+		dh.setKey(ECOUT_KEY);
+	});
+	dh.setKey(EC2_KEY);
+	t.strictEqual(dh.getKey().fingerprint().toString(),
+	    EC2_KEY.fingerprint().toString());
+
+	var dh2 = ECOUT_KEY.createDH();
+	t.throws(function () {
+		dh2.setKey(EC_KEY);
+	});
+
+	dh2 = EC_KEY.createDH();
+	t.throws(function () {
+		dh2.setKey(C_KEY);
+	});
+	t.end();
+});
+
 /* node 0.10 and earlier do not support DHE properly */
 if (process.version.match(/^v0\.10\./) ||
     process.version.match(/^v0\.[0-9]\./))
@@ -135,53 +185,5 @@ test('dhe generate ephemeral', function (t) {
 	var secret1 = dh.computeSecret(DS_KEY);
 	var secret2 = DS_KEY.createDH().computeSecret(ek);
 	t.deepEqual(secret1, secret2);
-	t.end();
-});
-
-test('ecdhe shared secret', function (t) {
-	var dh1 = EC_KEY.createDH();
-	var secret1 = dh1.computeSecret(EC2_KEY.toPublic());
-	t.ok(Buffer.isBuffer(secret1));
-
-	var dh2 = EC2_KEY.createDH();
-	var secret2 = dh2.computeSecret(EC_KEY.toPublic());
-	t.deepEqual(secret1, secret2);
-	t.end();
-});
-
-test('ecdhe generate ephemeral', function (t) {
-	var dh = EC_KEY.createDH();
-	var ek = dh.generateKey();
-	t.ok(ek instanceof sshpk.PrivateKey);
-	t.strictEqual(ek.type, 'ecdsa');
-	t.strictEqual(ek.curve, 'nistp256');
-
-	var secret1 = dh.computeSecret(EC_KEY);
-	var secret2 = EC_KEY.createDH().computeSecret(ek);
-	t.deepEqual(secret1, secret2);
-	t.end();
-});
-
-test('ecdhe reject diff curves', function (t) {
-	var dh = EC_KEY.createDH();
-	t.throws(function () {
-		dh.computeSecret(ECOUT_KEY.toPublic());
-	});
-	t.throws(function () {
-		dh.setKey(ECOUT_KEY);
-	});
-	dh.setKey(EC2_KEY);
-	t.strictEqual(dh.getKey().fingerprint().toString(),
-	    EC2_KEY.fingerprint().toString());
-
-	var dh2 = ECOUT_KEY.createDH();
-	t.throws(function () {
-		dh2.setKey(EC_KEY);
-	});
-
-	dh2 = EC_KEY.createDH();
-	t.throws(function () {
-		dh2.setKey(C_KEY);
-	});
 	t.end();
 });
