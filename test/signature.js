@@ -62,6 +62,19 @@ test('convert RSA sig to SSH format', function(t) {
 	t.end();
 });
 
+test('parse an invalid signature', function(t) {
+	t.throws(function() {
+		sshpk.parseSignature('AAAAA', 'dsa', 'asn1');
+	}, sshpk.SignatureParseError);
+	t.throws(function() {
+		sshpk.parseSignature('AAAAA', 'ecdsa', 'ssh');
+	}, sshpk.SignatureParseError);
+	t.throws(function() {
+		sshpk.parseSignature('', 'rsa', 'ssh');
+	}, sshpk.SignatureParseError);
+	t.end();
+});
+
 test('parse RSA sig in full wire SSH format and verify', function(t) {
 	var sig = sshpk.parseSignature(RSA_SIG_SSH, 'rsa', 'ssh');
 	var key = sshpk.parseKey(
