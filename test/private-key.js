@@ -95,7 +95,7 @@ test('PrivateKey convert ssh-private rsa to pem', function (t) {
 	t.end();
 });
 
-var KEY_RSA, KEY_DSA, KEY_ECDSA, KEY_ECDSA2;
+var KEY_RSA, KEY_DSA, KEY_ECDSA, KEY_ECDSA2, KEY_ED25519;
 
 test('setup keys', function (t) {
 	KEY_RSA = sshpk.parsePrivateKey(fs.readFileSync(
@@ -106,6 +106,8 @@ test('setup keys', function (t) {
 	    path.join(testDir, 'id_ecdsa')), 'pem');
 	KEY_ECDSA2 = sshpk.parsePrivateKey(fs.readFileSync(
 	    path.join(testDir, 'id_ecdsa2')), 'pem');
+	KEY_ED25519 = sshpk.parsePrivateKey(fs.readFileSync(
+	    path.join(testDir, 'id_ed25519')), 'pem');
 	t.end();
 });
 
@@ -171,6 +173,32 @@ test('PrivateKey#createSign on ECDSA 256 key', function (t) {
 	var v = KEY_ECDSA2.createVerify('sha256');
 	v.update('foobar');
 	t.ok(v.verify(sig));
+
+	t.end();
+});
+
+test('PrivateKey#createSign on ED25519 key', function (t) {
+	var s = KEY_ED25519.createSign('sha512');
+	s.write('foobar');
+	var sig = s.sign();
+	t.ok(sig);
+	t.ok(sig instanceof sshpk.Signature);
+
+	var v = KEY_ED25519.createVerify('sha512');
+	v.write('foobar');
+	t.ok(v.verify(sig));
+
+	var v2 = KEY_ECDSA2.createVerify('sha512');
+	v2.write('foobar');
+	t.notOk(v2.verify(sig));
+
+	/* ED25519 always uses SHA-512 */
+	t.throws(function() {
+		KEY_ED25519.createSign('sha1');
+	});
+	t.throws(function() {
+		KEY_ED25519.createVerify('sha256');
+	});
 
 	t.end();
 });
