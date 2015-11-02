@@ -55,6 +55,21 @@ test('sha256 fingerprint', function(t) {
 	t.end();
 });
 
+test('fingerprint with invalid algo', function(t) {
+	var k = sshpk.parseKey(SSH_1024, 'ssh');
+	t.throws(function() {
+		k.fingerprint('foo1234');
+	}, sshpk.InvalidAlgorithmError);
+	t.end();
+});
+
+test('parse fingerprint with invalid algo', function(t) {
+	t.throws(function () {
+		sshpk.parseFingerprint('FOO1234:aaaaaaa');
+	});
+	t.end();
+});
+
 test('fingerprint matches', function(t) {
 	var k1 = sshpk.parseKey(SSH_1024, 'ssh');
 	var k2 = sshpk.parseKey(SSH_2048, 'ssh');
