@@ -140,6 +140,25 @@ var ENC_PRIVATE = '-----BEGIN RSA PRIVATE KEY-----\n' +
 var ED_SSH = 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEi0pkfPe/+kbmnTSH0mfr0J4' +
 	'Fq7M7bshFAKB6uCyLDm foo@bar';
 
+var OAKLEY_PEM = '-----BEGIN PUBLIC KEY-----\n' +
+    'MIGpMHsGByqGSM49AgEwcAIBATAdBgcqhkjOPQECMBICAgCbBgkqhkjOPQECAwIC\n' +
+    'AT4wCAQBAAQDBzOPBCkEAAAAAAAAAAAAAAAAAAAAAAAAAHsAAAAAAAAAAAAAAAAA\n' +
+    'AAAAAAAByAIUAqqqqqqqqqqqqsfzx4gb0IaPqGwCAQMDKgAEA2uNp3wO2DeYe+wG\n' +
+    'yTpFhT5/kMAFkxiDsyoac6/uGwqH2r617caOXQ==\n' +
+    '-----END PUBLIC KEY-----\n';
+
+var ECDSA_SSH = 'ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlz' +
+    'dHAyNTYAAABBBDkhU/ikG5wiz0qUpJsZiF8U1JAPEP2jD9kCdm2OnEw23oIPNWKPzyjLWCpJ' +
+    '9U7vrw/GY1QS/INqo2zKXNMq8iE=';
+
+var ECDSA_PEM = '-----BEGIN PUBLIC KEY-----\n' +
+    'MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEOSFT+KQbnCLPSpSkmxmIXxTUkA8Q\n' +
+    '/aMP2QJ2bY6cTDbegg81Yo/PKMtYKkn1Tu+vD8ZjVBL8g2qjbMpc0yryIQ==\n' +
+    '-----END PUBLIC KEY-----\n';
+
+var RFC_AUTO = new Buffer('AAAAC3NzaC1lZDI1NTE5AAAAIEi0pkfPe/+kbmnTSH0mfr0J' +
+    '4Fq7M7bshFAKB6uCyLDm', 'base64');
+
 ///--- Tests
 
 test('1024b pem to rsa ssh key', function(t) {
@@ -206,6 +225,31 @@ test('1024b rsa ssh key with whitespace', function(t) {
 test('1024b rsa ssh key with whitespace auto', function(t) {
 	var k = sshpk.parseKey('\n\t    \n' + SSH_1024 + '\n', 'auto');
 	t.equal(k.toString('pem'), PEM_1024);
+	t.end();
+});
+
+test('oakley curve ecdsa key', function(t) {
+	t.throws(function() {
+		var k = sshpk.parseKey(OAKLEY_PEM, 'auto');
+	});
+	t.end();
+});
+
+test('256bit ecdsa as auto from string', function(t) {
+	var k = sshpk.parseKey(ECDSA_SSH, 'auto');
+	t.equal(k.toString('pem'), ECDSA_PEM);
+	t.end();
+});
+
+test('256bit ecdsa as auto from buffer', function(t) {
+	var k = sshpk.parseKey(new Buffer('  ' + ECDSA_SSH), 'auto');
+	t.equal(k.toString('pem'), ECDSA_PEM);
+	t.end();
+});
+
+test('rfc4253 auto fallback', function(t) {
+	var k = sshpk.parseKey(RFC_AUTO, 'auto');
+	t.equal(k.type, 'ed25519');
 	t.end();
 });
 

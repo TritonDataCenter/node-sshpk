@@ -56,6 +56,23 @@ test('PrivateKey load ECDSA 256 key', function (t) {
 	t.end();
 });
 
+test('PrivateKey can\'t load a secp224r1 key', function (t) {
+	var keyPem = fs.readFileSync(path.join(testDir, 'secp224r1_key.pem'));
+	t.throws(function() {
+		sshpk.parsePrivateKey(keyPem, 'pem');
+	});
+	t.end();
+});
+
+test('PrivateKey load ECDSA 256 key explicit curve', function (t) {
+	var keyPem = fs.readFileSync(path.join(testDir, 'id_ecdsa_exp'));
+	var key = sshpk.parsePrivateKey(keyPem, 'pem');
+	t.strictEqual(key.type, 'ecdsa');
+	t.strictEqual(key.size, 256);
+	t.strictEqual(key.curve, 'nistp256');
+	t.end();
+});
+
 test('PrivateKey load ED25519 256 key', function (t) {
 	var keyPem = fs.readFileSync(path.join(testDir, 'id_ed25519'));
 	var key = sshpk.parsePrivateKey(keyPem, 'pem');
