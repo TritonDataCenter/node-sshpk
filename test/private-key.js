@@ -194,6 +194,9 @@ test('PrivateKey#createSign on ECDSA 256 key', function (t) {
 	t.end();
 });
 
+if (process.version.match(/^v0\.[0-9]\./))
+	return;
+
 test('PrivateKey#createSign on ED25519 key', function (t) {
 	var s = KEY_ED25519.createSign('sha512');
 	s.write('foobar');

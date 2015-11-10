@@ -12,6 +12,10 @@ var ED_KEY, ED2_KEY, EC_KEY, EC2_KEY, ECOUT_KEY, DS_KEY, DS2_KEY, DSOUT_KEY;
 var C_KEY, C2_KEY;
 var C_SSH;
 
+/* node 0.8 and earlier do not support key derivation properly */
+if (process.version.match(/^v0\.[0-9]\./))
+	return;
+
 test('setup', function (t) {
 	var k = fs.readFileSync(path.join(__dirname, 'id_ed25519'));
 	ED_KEY = sshpk.parsePrivateKey(k);
@@ -139,8 +143,7 @@ test('ecdhe reject diff curves', function (t) {
 });
 
 /* node 0.10 and earlier do not support DHE properly */
-if (process.version.match(/^v0\.10\./) ||
-    process.version.match(/^v0\.[0-9]\./))
+if (process.version.match(/^v0\.10\./))
 	return;
 
 test('dhe shared secret', function (t) {

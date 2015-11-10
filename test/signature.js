@@ -85,22 +85,6 @@ test('parse RSA sig in full wire SSH format and verify', function(t) {
 	t.end();
 });
 
-test('parse ED25519 sig in full wire SSH format and verify', function(t) {
-	var sig = sshpk.parseSignature(ED25519_SIG_SSH, 'ed25519', 'ssh');
-	var s = ED25519_KEY.createVerify();
-	s.update('foobar');
-	t.ok(s.verify(sig));
-	t.end();
-});
-
-test('sign with ED25519 key and convert to SSH format', function(t) {
-	var s = ED25519_KEY.createSign();
-	s.update('foobar');
-	var sig = s.sign();
-	t.strictEqual(sig.toString('ssh'), ED25519_SIG_SSH);
-	t.end();
-});
-
 test('convert DSA sig to SSH format and back', function(t) {
 	var sig = sshpk.parseSignature(DSA_SIG_ASN1, 'dsa', 'asn1');
 	t.strictEqual(sig.toString('asn1'), DSA_SIG_ASN1);
@@ -155,5 +139,24 @@ test('convert full wire SSH ECDSA-384 sig and verify', function(t) {
 	var s = key.createVerify();
 	s.update('foobar');
 	t.ok(s.verify(sig));
+	t.end();
+});
+
+if (process.version.match(/^v0\.[0-9]\./))
+	return;
+
+test('parse ED25519 sig in full wire SSH format and verify', function(t) {
+	var sig = sshpk.parseSignature(ED25519_SIG_SSH, 'ed25519', 'ssh');
+	var s = ED25519_KEY.createVerify();
+	s.update('foobar');
+	t.ok(s.verify(sig));
+	t.end();
+});
+
+test('sign with ED25519 key and convert to SSH format', function(t) {
+	var s = ED25519_KEY.createSign();
+	s.update('foobar');
+	var sig = s.sign();
+	t.strictEqual(sig.toString('ssh'), ED25519_SIG_SSH);
 	t.end();
 });
