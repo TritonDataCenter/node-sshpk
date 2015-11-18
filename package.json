@@ -1,6 +1,6 @@
 {
   "name": "sshpk",
-  "version": "1.6.2",
+  "version": "1.7.0",
   "description": "A library for finding and using SSH public keys",
   "main": "lib/index.js",
   "scripts": {
@@ -39,7 +39,7 @@
   "homepage": "https://github.com/arekinath/node-sshpk#readme",
   "dependencies": {
     "asn1": ">=0.2.3 <0.3.0",
-    "assert-plus": ">=0.1.5 <0.2.0",
+    "assert-plus": ">=0.2.0 <0.3.0",
     "dashdash": ">=1.10.1 <2.0.0"
   },
   "optionalDependencies": {

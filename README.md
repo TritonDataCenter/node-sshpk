@@ -129,6 +129,15 @@ Parameters
 - `name` -- Optional name for the key being parsed (eg. the filename that
             was opened). Used to generate Error messages
 
+### `Key.isKey(obj)`
+
+Returns `true` if the given object is a valid `Key` object created by a version
+of `sshpk` compatible with this one.
+
+Parameters
+
+- `obj` -- Object to identify
+
 ### `Key#type`
 
 String, the type of key. Valid options are `rsa`, `dsa`, `ecdsa`.
@@ -221,6 +230,15 @@ Parameters
 - `name` -- Optional name for the key being parsed (eg. the filename that
             was opened). Used to generate Error messages
 
+### `PrivateKey.isPrivateKey(obj)`
+
+Returns `true` if the given object is a valid `PrivateKey` object created by a
+version of `sshpk` compatible with this one.
+
+Parameters
+
+- `obj` -- Object to identify
+
 ### `PrivateKey#type`
 
 String, the type of key. Valid options are `rsa`, `dsa`, `ecdsa`.
@@ -306,6 +324,15 @@ Parameters
                   support to. If `fingerprint` uses a hash algorithm not on
                   this list, throws `InvalidAlgorithmError`.
 
+### `Fingerprint.isFingerprint(obj)`
+
+Returns `true` if the given object is a valid `Fingerprint` object created by a
+version of `sshpk` compatible with this one.
+
+Parameters
+
+- `obj` -- Object to identify
+
 ### `Fingerprint#toString([format])`
 
 Returns a fingerprint as a string, in the given format.
@@ -344,6 +371,15 @@ Parameters
 - `algorithm` -- a String, name of the algorithm to be used, possible values
                  are `rsa`, `dsa`, `ecdsa`
 - `format` -- a String, either `asn1` or `ssh`
+
+### `Signature.isSignature(obj)`
+
+Returns `true` if the given object is a valid `Signature` object created by a
+version of `sshpk` compatible with this one.
+
+Parameters
+
+- `obj` -- Object to identify
 
 ### `Signature#toBuffer([format = 'asn1'])`
 
