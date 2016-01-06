@@ -4,6 +4,7 @@ var test = require('tape').test;
 var sshpk = require('../lib/index');
 var path = require('path');
 var fs = require('fs');
+var temp = require('temp');
 
 var testDir = __dirname;
 
@@ -18,6 +19,8 @@ FPS.ecdsa = sshpk.parseFingerprint(
     'SHA256:e34c67Npv31uMtfVUEBJln5aOcJugzDaYGsj1Uph5DE');
 FPS.ecdsa2 = sshpk.parseFingerprint(
     'SHA256:Kyu0EMqH8fzfp9RXKJ6kmsk9qKGBqVRtlOuk6bXfCEU');
+
+temp.track();
 
 test('openssl version', function (t) {
 	var kid = spawn('openssl', ['version']);
@@ -58,6 +61,17 @@ test('openssl version', function (t) {
 
 function genTests() {
 ['rsa', 'dsa', 'ecdsa'].forEach(function (algo) {
+	var tmp;
+
+	test('make temp dir', function (t) {
+		temp.mkdir('sshpk.test.openssl-cmd.' + algo,
+		    function (err, tmpDir) {
+			t.error(err);
+			tmp = tmpDir;
+			t.end();
+		});
+	});
+
 	test('pkcs8 '+algo+' public key parses', function (t) {
 		var kid = spawn('openssl', [
 			'pkey', '-in', path.join(testDir, 'id_' +algo),
@@ -135,6 +149,64 @@ function genTests() {
 			t.end();
 		});
 	});
+
+	test('sign with sshpk, openssl dgst verify', function (t) {
+		var pem = fs.readFileSync(path.join(testDir, 'id_' + algo));
+		var key = sshpk.parsePrivateKey(pem, 'pkcs1');
+		var pkcs8 = key.toPublic().toBuffer('pkcs8');
+
+		var data = 'foobartest';
+		var sig = key.createSign('sha256').update(data).sign().
+		    toBuffer();
+
+		fs.writeFileSync(path.join(tmp, 'signature'), sig);
+		fs.writeFileSync(path.join(tmp, 'pubkey'), pkcs8);
+
+		var kid = spawn('openssl', ['dgst',
+		    '-binary', '-sha256',
+		    '-verify', path.join(tmp, 'pubkey'),
+		    '-signature', path.join(tmp, 'signature')]);
+		var bufs = [];
+		kid.stdout.on('data', bufs.push.bind(bufs));
+		kid.stderr.on('data', bufs.push.bind(bufs));
+		kid.on('close', function (rc) {
+			t.equal(rc, 0);
+			var output = Buffer.concat(bufs).toString('ascii');
+			t.strictEqual(output, 'Verified OK\n');
+			t.end();
+		});
+		kid.stdin.write(data);
+		kid.stdin.end();
+	});
+
+	test('sign with openssl, verify with sshpk', function (t) {
+		var pem = fs.readFileSync(path.join(testDir, 'id_' + algo));
+		var key = sshpk.parsePrivateKey(pem, 'pkcs1');
+
+		var data = 'foobartest';
+
+		var kid = spawn('openssl', ['dgst',
+		    '-binary', '-sha256',
+		    '-sign', path.join(testDir, 'id_' + algo)]);
+		var bufs = [];
+		kid.stdout.on('data', bufs.push.bind(bufs));
+		kid.on('close', function (rc) {
+			t.equal(rc, 0);
+			var output = Buffer.concat(bufs);
+			var sig = sshpk.parseSignature(output, 'rsa', 'asn1');
+			t.ok(key.createVerify('sha256').update(data).
+			    verify(sig));
+			t.end();
+		});
+		kid.stdin.write(data);
+		kid.stdin.end();
+	});
+});
+
+test('teardown', function (t) {
+    temp.cleanup(function () {
+        t.end();
+    });
 });
 }
 
