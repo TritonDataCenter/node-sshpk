@@ -193,7 +193,8 @@ function genTests() {
 		kid.on('close', function (rc) {
 			t.equal(rc, 0);
 			var output = Buffer.concat(bufs);
-			var sig = sshpk.parseSignature(output, 'rsa', 'asn1');
+			var sig = sshpk.parseSignature(output, algo, 'asn1');
+			t.ok(sig);
 			t.ok(key.createVerify('sha256').update(data).
 			    verify(sig));
 			t.end();

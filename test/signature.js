@@ -122,6 +122,16 @@ test('convert SSH ECDSA-256 sig and verify', function(t) {
 	t.end();
 });
 
+test('signatures of wrong type fail verification', function(t) {
+	var key = sshpk.parseKey(
+	    fs.readFileSync(path.join(testDir, 'id_ecdsa')), 'pem');
+	var sig = sshpk.parseSignature(ECDSA_SIG_ASN1, 'rsa', 'asn1');
+	var s = key.createVerify();
+	s.update('foobar');
+	t.notOk(s.verify(sig));
+	t.end();
+});
+
 test('convert SSH ECDSA-384 sig and verify', function(t) {
 	var key = sshpk.parseKey(
 	    fs.readFileSync(path.join(testDir, 'id_ecdsa')), 'pem');
