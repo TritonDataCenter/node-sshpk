@@ -34,7 +34,8 @@
   },
   "directories": {
     "bin": "./bin",
-    "lib": "./lib"
+    "lib": "./lib",
+    "man": "./man/man1"
   },
   "homepage": "https://github.com/arekinath/node-sshpk#readme",
   "dependencies": {

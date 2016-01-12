@@ -17,7 +17,9 @@
 #
 # Tools
 #
-NPM_EXEC        := npm
+# Get md2man-roff from <https://github.com/sunaku/md2man>
+MD2MAN		:= md2man-roff
+NPM_EXEC	:= npm
 TAP		:= ./node_modules/.bin/tape
 
 #
@@ -25,10 +27,14 @@ TAP		:= ./node_modules/.bin/tape
 #
 JS_FILES	:= $(shell find lib -name '*.js')
 JSL_CONF_NODE	 = tools/jsl.node.conf
-JSL_FILES_NODE   = $(JS_FILES)
+JSL_FILES_NODE	 = $(JS_FILES)
 JSSTYLE_FILES	 = $(JS_FILES)
-JSSTYLE_FLAGS    = -f tools/jsstyle.conf
+JSSTYLE_FLAGS	 = -f tools/jsstyle.conf
 
+MAN_PAGES       := $(shell ls man/src)
+MAN_OUTDIR      := man/man1
+MAN_OUTPAGES=$(MAN_PAGES:%.md=$(MAN_OUTDIR)/%.1)
+MAN_ROOT        := man/src
 
 include ./tools/mk/Makefile.defs
 include ./tools/mk/Makefile.node_deps.defs
@@ -56,6 +62,15 @@ coverage: all
 codecovio: coverage
 	$(NPM_EXEC) install codecov.io && \
 	    ./node_modules/.bin/codecov < coverage/lcov.info
+
+$(MAN_OUTDIR):
+	mkdir -p $@
+
+$(MAN_OUTDIR)/%.1: $(MAN_ROOT)/%.md | $(MAN_OUTDIR)
+	$(MD2MAN) $^ > $@
+
+.PHONY: manpages
+manpages: $(MAN_OUTPAGES)
 
 include ./tools/mk/Makefile.deps
 include ./tools/mk/Makefile.node_deps.targ
