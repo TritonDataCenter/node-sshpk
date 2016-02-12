@@ -178,12 +178,11 @@ test('create ed25519 self-signed, loopback', function (t) {
 	var id = sshpk.identityForHost('foobar.com');
 	var cert = sshpk.createSelfSignedCertificate(id, SUE_KEY);
 
-	t.throws(function () {
-		cert.toBuffer('pem');
-	});
-	t.throws(function () {
-		cert.toBuffer('x509');
-	});
+	var x509 = cert.toBuffer('pem');
+	var cert2 = sshpk.parseCertificate(x509, 'pem');
+	t.ok(SUE_KEY.fingerprint().matches(cert2.subjectKey));
+	t.ok(cert2.subjects[0].equals(cert.subjects[0]));
+	t.ok(cert2.isSignedByKey(SUE_KEY));
 
 	var ossh = cert.toBuffer('openssh');
 	var cert3 = sshpk.parseCertificate(ossh, 'openssh');
@@ -329,5 +328,21 @@ test('example cert: lots of SAN (x509)', function (t) {
 	t.ok(cert.subjects.some(function (subj) {
 		return (subj.equals(id));
 	}));
+	t.end();
+});
+
+
+test('example cert: ed25519 cert from curdle-pkix-04', function (t) {
+	var cert = sshpk.parseCertificate(
+	    fs.readFileSync(path.join(testDir, 'ed25519-pkix-cert.pem')),
+	    'pem');
+	t.strictEqual(cert.subjectKey.type, 'curve25519');
+	t.strictEqual(cert.subjects[0].type, 'user');
+	t.strictEqual(cert.subjects[0].cn, 'IETF Test Demo');
+
+	var key = sshpk.parsePrivateKey(
+	    fs.readFileSync(path.join(testDir, 'ed25519-pkix.pem')), 'pem');
+	t.ok(cert.isSignedByKey(key));
+
 	t.end();
 });
