@@ -85,6 +85,76 @@ test('PrivateKey load ED25519 256 key', function (t) {
 	keyPem = key.toBuffer('openssh');
 	var key2 = sshpk.parsePrivateKey(keyPem, 'openssh');
 	t.ok(ID_ED25519_FP.matches(key2));
+
+	keyPem = key.toBuffer('pkcs1');
+	var realKeyPem = fs.readFileSync(path.join(testDir, 'id_ed25519.pem'));
+	t.strictEqual(keyPem.toString('base64'), realKeyPem.toString('base64'));
+	t.end();
+});
+
+test('PrivateKey load ed25519 pem key', function (t) {
+	var keyPem = fs.readFileSync(path.join(testDir, 'id_ed25519.pem'));
+	var key = sshpk.parsePrivateKey(keyPem, 'pem');
+	t.strictEqual(key.type, 'ed25519');
+	t.strictEqual(key.size, 256);
+	t.ok(ID_ED25519_FP.matches(key));
+	t.end();
+});
+
+test('PrivateKey load ed25519 key (ex. from curdle-pkix-04)', function (t) {
+	var keyPem = fs.readFileSync(path.join(testDir, 'ed25519-pkix.pem'));
+	var key = sshpk.parsePrivateKey(keyPem, 'pem');
+	t.strictEqual(key.type, 'ed25519');
+	t.strictEqual(key.size, 256);
+	t.end();
+});
+
+test('PrivateKey load ed25519 key (no public curdle-pkix-05)', function (t) {
+	var keyPem = fs.readFileSync(path.join(testDir,
+	    'curdle-pkix-privonly.pem'));
+	var key = sshpk.parsePrivateKey(keyPem, 'pem');
+	t.strictEqual(key.type, 'ed25519');
+	t.strictEqual(key.size, 256);
+	t.end();
+});
+
+test('PrivateKey load ed25519 key (w/ public curdle-pkix-05)', function (t) {
+	var keyPem = fs.readFileSync(path.join(testDir,
+	    'curdle-pkix-withpub.pem'));
+	var key = sshpk.parsePrivateKey(keyPem, 'pem');
+	t.strictEqual(key.type, 'ed25519');
+	t.strictEqual(key.size, 256);
+	t.end();
+});
+
+test('PrivateKey invalid ed25519 key (not DER)', function (t) {
+	var keyPem = fs.readFileSync(path.join(testDir,
+	    'ed25519-invalid-ber.pem'));
+	t.throws(function () {
+		sshpk.parsePrivateKey(keyPem, 'pem');
+	});
+	t.end();
+});
+
+test('PrivateKey invalid ed25519 key (invalid curve point)', function (t) {
+	var keyPem = fs.readFileSync(path.join(testDir,
+	    'ed25519-invalid-mask.pem'));
+	t.throws(function () {
+		sshpk.parsePrivateKey(keyPem, 'pem');
+	});
+	t.end();
+});
+
+test('PrivateKey invalid ed25519 key (elided zero)', function (t) {
+	var keyPem = fs.readFileSync(path.join(testDir,
+	    'ed25519-invalid-zero.pem'));
+	/*
+	 * We're actually more forgiving of this kind of invalid input than
+	 * the RFC says we need to be. Since this is purely about the format of
+	 * the data, and not about the validity of the point itself this should
+	 * be safe.
+	 */
+	var key = sshpk.parsePrivateKey(keyPem, 'pem');
 	t.end();
 });
 
