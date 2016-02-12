@@ -30,6 +30,10 @@ var ED_SSH = 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEi0pkfPe/+kbmnTSH0mfr0J4' +
 var ED2_SSH = 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIPu+h5Zu8GHgh8seZ9GittT' +
 	'WHfpbi0vkNksH77yaMKqD';
 
+var ED2_PEM = '-----BEGIN PUBLIC KEY-----\n' +
+	'MC0wCAYDK2VkCgECAyEA+76Hlm7wYeCHyx5n0aK21NYd+luLS+Q2SwfvvJowqoM=\n' +
+	'-----END PUBLIC KEY-----\n';
+
 test('fingerprint', function(t) {
 	var k = sshpk.parseKey(SSH_1024, 'ssh');
 	var fp = k.fingerprint('md5').toString();
@@ -95,6 +99,8 @@ test('fingerprint of non-normalized ed25519 key', function(t) {
 	var k = sshpk.parseKey(ED2_SSH, 'ssh');
 	var f = sshpk.parseFingerprint(
 	    'SHA256:k1NS4bL2M1fG3JKd8WI9t6ETq+6VeRtvLAxt8DC0exE');
+	t.ok(f.matches(k));
+	k = sshpk.parseKey(ED2_PEM, 'pem');
 	t.ok(f.matches(k));
 	t.end();
 });

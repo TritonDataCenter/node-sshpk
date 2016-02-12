@@ -147,6 +147,16 @@ var ENC_ECDSA = '-----BEGIN EC PRIVATE KEY-----\n' +
 var ED_SSH = 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEi0pkfPe/+kbmnTSH0mfr0J4' +
 	'Fq7M7bshFAKB6uCyLDm foo@bar';
 
+var ED_PKCS8 = '-----BEGIN PUBLIC KEY-----\n' +
+    'MC0wCAYDK2VkCgECAyEAGb9ECWmEzf6FQbrBZ9w7lshQhqowtrbLDFw4rXAxZuE=\n' +
+    '-----END PUBLIC KEY-----\n';
+
+var ED_PKIX_SSH = 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIQAZv0QJaYTN/oVBusFn3' +
+    'DuWyFCGqjC2tssMXDitcDFm4Q== test';
+
+var ED_PKIX_NORM = 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBm/RAlphM3+hUG6wWfc' +
+    'O5bIUIaqMLa2ywxcOK1wMWbh test';
+
 var OAKLEY_PEM = '-----BEGIN PUBLIC KEY-----\n' +
     'MIGpMHsGByqGSM49AgEwcAIBATAdBgcqhkjOPQECMBICAgCbBgkqhkjOPQECAwIC\n' +
     'AT4wCAQBAAQDBzOPBCkEAAAAAAAAAAAAAAAAAAAAAAAAAHsAAAAAAAAAAAAAAAAA\n' +
@@ -307,6 +317,14 @@ test('ed25519 ssh key', function(t) {
 test('ed25519 ssh key with auto', function(t) {
 	var k = sshpk.parseKey(ED_SSH, 'auto');
 	t.equal(k.type, 'ed25519');
+	t.end();
+});
+
+test('ed25519 key from pkcs8', function(t) {
+	var k = sshpk.parseKey(ED_PKCS8, 'auto');
+	t.equal(k.type, 'ed25519');
+	k.comment = 'test';
+	t.equal(k.toString('ssh'), ED_PKIX_NORM);
 	t.end();
 });
 

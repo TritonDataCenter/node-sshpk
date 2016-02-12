@@ -83,6 +83,19 @@ test('PrivateKey load ED25519 256 key', function (t) {
 	keyPem = key.toBuffer('openssh');
 	var key2 = sshpk.parsePrivateKey(keyPem, 'openssh');
 	t.ok(ID_ED25519_FP.matches(key2));
+
+	keyPem = key.toBuffer('pkcs1');
+	var realKeyPem = fs.readFileSync(path.join(testDir, 'id_ed25519.pem'));
+	t.strictEqual(keyPem.toString('base64'), realKeyPem.toString('base64'));
+	t.end();
+});
+
+test('PrivateKey load ed25519 pem key', function (t) {
+	var keyPem = fs.readFileSync(path.join(testDir, 'id_ed25519.pem'));
+	var key = sshpk.parsePrivateKey(keyPem, 'pem');
+	t.strictEqual(key.type, 'ed25519');
+	t.strictEqual(key.size, 256);
+	t.ok(ID_ED25519_FP.matches(key));
 	t.end();
 });
 
