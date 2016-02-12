@@ -52,8 +52,8 @@ test('derive ed25519 -> curve25519 -> back (negative seed)', function (t) {
 	t.strictEqual(key.size, 256);
 	var key2 = key.derive('ed25519');
 	t.ok(key2.fingerprint().matches(NG_KEY));
-	t.strictEqual(key2.part.r.toString('base64'),
-	    key.part.r.toString('base64'));
+	t.strictEqual(key2.part.k.toString('base64'),
+	    key.part.k.toString('base64'));
 	t.end();
 });
 
@@ -64,8 +64,8 @@ test('derive curve25519 -> ed25519', function (t) {
 	var k2 = k.derive('ed25519');
 	t.strictEqual(k2.type, 'ed25519');
 	t.ok(k2.fingerprint().matches(ED_KEY));
-	t.strictEqual(k2.part.r.toString('base64'),
-	    ED_KEY.part.r.toString('base64'));
+	t.strictEqual(k2.part.k.toString('base64'),
+	    ED_KEY.part.k.toString('base64'));
 	t.end();
 });
 
