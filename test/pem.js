@@ -136,6 +136,13 @@ var ENC_PRIVATE = '-----BEGIN RSA PRIVATE KEY-----\n' +
 	'gBx85sgirfSJBwx1mpQzsD1PSE7krAzlA4DRfgPChAWJnlUn89aPJ52uokHneJIK\n' +
 	'z8/ApT6HCd3EnH9VHEtXp116ZVk4PhRiiOMY/ek2uhFK57wgMxOrRM3OgODrd+5A\n' +
 	'-----END RSA PRIVATE KEY-----\n';
+var ENC_ECDSA = '-----BEGIN EC PRIVATE KEY-----\n' +
+	'Proc-Type: 4,ENCRYPTED\n' +
+	'DEK-Info: AES-128-CBC,04BA2E1B464A88F180CD33D2B7A652E5\n\n' +
+	'VHUwZwMseYfvZuO523B32r/SEq8W5sV76ptbUJh/EsfLYkBhKaiU0tshp9mvfm4s\n' +
+	'1VuVixfrFppGJ0UfVFls10I9wYVR2PWHsOLOGTq28jgE6k94kX5R3NjeXMUZCr5B\n' +
+	'lZLoKRFcQu8IzuJrm+qYCvwa4Uyn0O7xB3xGlNlSDHs=\n' +
+	'-----END EC PRIVATE KEY-----\n';
 
 var ED_SSH = 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEi0pkfPe/+kbmnTSH0mfr0J4' +
 	'Fq7M7bshFAKB6uCyLDm foo@bar';
@@ -303,9 +310,15 @@ test('ed25519 ssh key with auto', function(t) {
 	t.end();
 });
 
-test('encrypted private key', function(t) {
+test('encrypted rsa private key', function(t) {
 	t.throws(function () {
 		var k = sshpk.parseKey(ENC_PRIVATE, 'pem');
 	});
+	t.end();
+});
+
+test('encrypted ecdsa private key with pw', function(t) {
+	var k = sshpk.parseKey(ENC_ECDSA, 'pem', { passphrase: 'asdfasdf' });
+	t.equal(k.type, 'ecdsa');
 	t.end();
 });
