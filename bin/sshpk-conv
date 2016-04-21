@@ -80,9 +80,6 @@ function getPassword(cb) {
 		case CTRLD:
 			wtty.write('\r\n');
 			rtty.setRawMode(false);
-			evts.forEach(function (b) {
-				console.error('evt: ' + b.toString('base64'));
-			});
 			cb(pw);
 			break;
 		case CTRLC:
