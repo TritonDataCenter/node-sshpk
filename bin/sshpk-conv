@@ -9,6 +9,7 @@ var fs = require('fs');
 var path = require('path');
 var tty = require('tty');
 var readline = require('readline');
+var getPassword = require('getpass').getPass;
 
 var options = [
 	{
@@ -57,45 +58,6 @@ var options = [
 		help: 'Shows this help text'
 	}
 ];
-
-var BACKSPACE = String.fromCharCode(127);
-var CTRLC = '\u0003';
-var CTRLD = '\u0004';
-function getPassword(cb) {
-	var evts = [];
-	var rttyfd = fs.openSync('/dev/tty', 'r+');
-	var rtty = new tty.ReadStream(rttyfd);
-	var wttyfd = fs.openSync('/dev/tty', 'w+');
-	var wtty = new tty.WriteStream(wttyfd);
-	wtty.write('Password:');
-	rtty.setEncoding('utf8');
-	rtty.setRawMode(true);
-	var pw = '';
-	rtty.on('data', function (data) {
-		evts.push(data);
-		var ch = data.toString('utf8');
-		switch (ch) {
-		case '\n':
-		case '\r':
-		case CTRLD:
-			wtty.write('\r\n');
-			rtty.setRawMode(false);
-			cb(pw);
-			break;
-		case CTRLC:
-			wtty.write('\r\n');
-			rtty.setRawMode(false);
-			process.exit(1);
-			break;
-		case BACKSPACE:
-			pw = pw.slice(0, pw.length - 1);
-			break;
-		default:
-			pw += ch;
-			break;
-		}
-	});
-}
 
 if (require.main === module) {
 	var parser = dashdash.createParser({
@@ -186,7 +148,7 @@ if (require.main === module) {
 			var key = f(buf, fmt, parseOpts);
 		} catch (e) {
 			if (e.name === 'KeyEncryptedError') {
-				getPassword(function (pw) {
+				getPassword(function (err, pw) {
 					parseOpts.passphrase = pw;
 					processKey();
 				});
