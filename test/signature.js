@@ -112,6 +112,54 @@ test('convert SSH DSA sig and verify', function(t) {
 	t.end();
 });
 
+test('sign with DSA and loopback ssh', function(t) {
+	var key = sshpk.parsePrivateKey(
+	    fs.readFileSync(path.join(testDir, 'id_dsa')), 'pem');
+	var signer = key.createSign();
+	signer.update('foobar');
+	var sig = signer.sign();
+
+	var data = sig.toBuffer('ssh');
+	sig = sshpk.parseSignature(data, 'dsa', 'ssh');
+
+	var s = key.createVerify();
+	s.update('foobar');
+	t.ok(s.verify(sig));
+	t.end();
+});
+
+test('sign with RSA and loopback ssh', function(t) {
+	var key = sshpk.parsePrivateKey(
+	    fs.readFileSync(path.join(testDir, 'id_rsa')), 'pem');
+	var signer = key.createSign();
+	signer.update('foobar');
+	var sig = signer.sign();
+
+	var data = sig.toBuffer('ssh');
+	sig = sshpk.parseSignature(data, 'rsa', 'ssh');
+
+	var s = key.createVerify();
+	s.update('foobar');
+	t.ok(s.verify(sig));
+	t.end();
+});
+
+test('sign with ECDSA-256 and loopback ssh', function(t) {
+	var key = sshpk.parsePrivateKey(
+	    fs.readFileSync(path.join(testDir, 'id_ecdsa2')), 'pem');
+	var signer = key.createSign();
+	signer.update('foobar');
+	var sig = signer.sign();
+
+	var data = sig.toBuffer('ssh');
+	sig = sshpk.parseSignature(data, 'ecdsa', 'ssh');
+
+	var s = key.createVerify();
+	s.update('foobar');
+	t.ok(s.verify(sig));
+	t.end();
+});
+
 test('convert SSH ECDSA-256 sig and verify', function(t) {
 	var key = sshpk.parseKey(
 	    fs.readFileSync(path.join(testDir, 'id_ecdsa2')), 'pem');
@@ -122,13 +170,33 @@ test('convert SSH ECDSA-256 sig and verify', function(t) {
 	t.end();
 });
 
-test('signatures of wrong type fail verification', function(t) {
+test('signature of wrong type fails verification', function(t) {
 	var key = sshpk.parseKey(
 	    fs.readFileSync(path.join(testDir, 'id_ecdsa')), 'pem');
 	var sig = sshpk.parseSignature(ECDSA_SIG_ASN1, 'rsa', 'asn1');
 	var s = key.createVerify();
 	s.update('foobar');
 	t.notOk(s.verify(sig));
+	t.end();
+});
+
+test('signature on wrong data fails verification', function(t) {
+	var key = sshpk.parseKey(
+	    fs.readFileSync(path.join(testDir, 'id_ecdsa2')), 'pem');
+	var sig = sshpk.parseSignature(ECDSA2_SIG_SSH, 'ecdsa', 'ssh');
+	var s = key.createVerify();
+	s.update('foonotbar');
+	t.ok(!s.verify(sig));
+	t.end();
+});
+
+test('signature with wrong key fails verification', function(t) {
+	var key = sshpk.parseKey(
+	    fs.readFileSync(path.join(testDir, 'id_ecdsa')), 'pem');
+	var sig = sshpk.parseSignature(ECDSA2_SIG_SSH, 'ecdsa', 'ssh');
+	var s = key.createVerify();
+	s.update('foobar');
+	t.ok(!s.verify(sig));
 	t.end();
 });
 

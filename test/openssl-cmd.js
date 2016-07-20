@@ -202,6 +202,66 @@ function genTests() {
 		kid.stdin.write(data);
 		kid.stdin.end();
 	});
+
+	test('make a self-signed cert, parse with openssh', function (t) {
+		var pem = fs.readFileSync(path.join(testDir, 'id_' + algo));
+		var key = sshpk.parsePrivateKey(pem, 'pkcs1');
+
+		var ids = [
+			sshpk.identityFromDN('cn=' + algo + ', c=US'),
+			sshpk.identityFromDN('cn=' + algo + '.test, c=AU')
+		];
+		var cert = sshpk.createSelfSignedCertificate(ids, key);
+		var certPem = cert.toBuffer('pem');
+
+		var kid = spawn('openssl', ['x509', '-text']);
+		var bufs = [];
+		kid.stdout.on('data', bufs.push.bind(bufs));
+		kid.on('close', function (rc) {
+			t.equal(rc, 0);
+			var output = Buffer.concat(bufs).toString();
+
+			var m = output.match(/Issuer: (.*)$/m);
+			t.strictEqual(m[1], 'CN=' + algo + ', C=US');
+
+			m = output.match(/Subject: (.*)$/m);
+			t.strictEqual(m[1], 'CN=' + algo + ', C=US');
+
+			var re = /DNS:([^, \n]+)([, ]+|$)/gm;
+			m = re.exec(output);
+			t.strictEqual(m[1], algo);
+
+			m = re.exec(output);
+			t.strictEqual(m[1], algo + '.test');
+			t.end();
+		});
+		kid.stdin.write(certPem);
+		kid.stdin.end();
+	});
+
+	test('make a self-signed cert, verify with openssh', function (t) {
+		var pem = fs.readFileSync(path.join(testDir, 'id_' + algo));
+		var key = sshpk.parsePrivateKey(pem, 'pkcs1');
+
+		var id = sshpk.identityFromDN('cn=' + algo);
+		var cert = sshpk.createSelfSignedCertificate(id, key);
+		var certPem = cert.toBuffer('pem');
+
+		fs.writeFileSync(path.join(tmp, 'ca.pem'), certPem);
+
+		var kid = spawn('openssl', ['verify',
+		    '-CAfile', path.join(tmp, 'ca.pem')]);
+		var bufs = [];
+		kid.stdout.on('data', bufs.push.bind(bufs));
+		kid.on('close', function (rc) {
+			t.equal(rc, 0);
+			var output = Buffer.concat(bufs).toString();
+			t.strictEqual(output.trim(), 'stdin: OK');
+			t.end();
+		});
+		kid.stdin.write(certPem);
+		kid.stdin.end();
+	});
 });
 
 test('teardown', function (t) {
