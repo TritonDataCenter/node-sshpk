@@ -5,7 +5,7 @@ var sshpk = require('../lib/index');
 var path = require('path');
 var fs = require('fs');
 
-var testDir = __dirname;
+var testDir = path.join(__dirname, 'assets');
 
 var ID_RSA_FP = sshpk.parseFingerprint(
     'SHA256:tT5wcGMJkBzNu+OoJYEgDCwIcDAIFCUahAmuTT4qC3s');

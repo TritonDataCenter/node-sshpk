@@ -6,7 +6,7 @@ var path = require('path');
 var fs = require('fs');
 var temp = require('temp');
 
-var testDir = __dirname;
+var testDir = path.join(__dirname, 'assets');
 
 var spawn = require('child_process').spawn;
 

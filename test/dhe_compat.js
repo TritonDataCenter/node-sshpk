@@ -17,6 +17,8 @@ var ED_KEY, ED2_KEY, EC_KEY, EC2_KEY, ECOUT_KEY, DS_KEY, DS2_KEY, DSOUT_KEY;
 var C_KEY, C2_KEY;
 var C_SSH;
 
+var testDir = path.join(__dirname, 'assets');
+
 var sandbox;
 
 test('set up sandbox', function (t) {
@@ -32,21 +34,21 @@ test('set up sandbox', function (t) {
 });
 
 test('setup', function (t) {
-	var k = fs.readFileSync(path.join(__dirname, 'id_ed25519'));
+	var k = fs.readFileSync(path.join(testDir, 'id_ed25519'));
 	ED_KEY = sshpk.parsePrivateKey(k);
-	k = fs.readFileSync(path.join(__dirname, 'id_ed255192'));
+	k = fs.readFileSync(path.join(testDir, 'id_ed255192'));
 	ED2_KEY = sshpk.parsePrivateKey(k);
-	k = fs.readFileSync(path.join(__dirname, 'id_ecdsa2'));
+	k = fs.readFileSync(path.join(testDir, 'id_ecdsa2'));
 	EC_KEY = sshpk.parsePrivateKey(k);
-	k = fs.readFileSync(path.join(__dirname, 'id_ecdsa3'));
+	k = fs.readFileSync(path.join(testDir, 'id_ecdsa3'));
 	EC2_KEY = sshpk.parsePrivateKey(k);
-	k = fs.readFileSync(path.join(__dirname, 'id_ecdsa'));
+	k = fs.readFileSync(path.join(testDir, 'id_ecdsa'));
 	ECOUT_KEY = sshpk.parsePrivateKey(k);
-	k = fs.readFileSync(path.join(__dirname, 'id_dsa2'));
+	k = fs.readFileSync(path.join(testDir, 'id_dsa2'));
 	DS_KEY = sshpk.parsePrivateKey(k);
-	k = fs.readFileSync(path.join(__dirname, 'id_dsa3'));
+	k = fs.readFileSync(path.join(testDir, 'id_dsa3'));
 	DS2_KEY = sshpk.parsePrivateKey(k);
-	k = fs.readFileSync(path.join(__dirname, 'id_dsa'));
+	k = fs.readFileSync(path.join(testDir, 'id_dsa'));
 	DSOUT_KEY = sshpk.parsePrivateKey(k);
 	t.end();
 });

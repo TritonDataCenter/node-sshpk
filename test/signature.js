@@ -7,7 +7,7 @@ var fs = require('fs');
 var path = require('path');
 var crypto = require('crypto');
 
-var testDir = __dirname;
+var testDir = path.join(__dirname, 'assets');
 
 var RSA_PEM = fs.readFileSync(path.join(testDir, 'id_rsa'));
 var DSA_PEM = fs.readFileSync(path.join(testDir, 'id_dsa'));
