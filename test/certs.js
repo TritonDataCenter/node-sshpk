@@ -14,6 +14,7 @@ var GEORGE_KEY, GEORGE_SSH, GEORGE_X509;
 var BARRY_KEY;
 var JIM_KEY, JIM_SSH, JIM_X509;
 var EC_KEY, EC_KEY2;
+var SUE_KEY;
 
 test('setup', function (t) {
 	var d = fs.readFileSync(path.join(testDir, 'id_dsa'));
@@ -34,6 +35,10 @@ test('setup', function (t) {
 	EC_KEY = sshpk.parsePrivateKey(d);
 	d = fs.readFileSync(path.join(testDir, 'id_ecdsa2'));
 	EC2_KEY = sshpk.parsePrivateKey(d);
+
+	d = fs.readFileSync(path.join(testDir, 'id_ed25519'));
+	SUE_KEY = sshpk.parsePrivateKey(d);
+
 	t.end();
 });
 
@@ -165,6 +170,26 @@ test('create ecdsa signed, loopback', function (t) {
 	t.ok(cert3.subjects[0].equals(cert.subjects[0]));
 	t.strictEqual(cert3.subjects[0].uid, 'jim');
 	t.ok(cert3.isSignedBy(cacert));
+
+	t.end();
+});
+
+test('create ed25519 self-signed, loopback', function (t) {
+	var id = sshpk.identityForHost('foobar.com');
+	var cert = sshpk.createSelfSignedCertificate(id, SUE_KEY);
+
+	t.throws(function () {
+		cert.toBuffer('pem');
+	});
+	t.throws(function () {
+		cert.toBuffer('x509');
+	});
+
+	var ossh = cert.toBuffer('openssh');
+	var cert3 = sshpk.parseCertificate(ossh, 'openssh');
+	t.ok(SUE_KEY.fingerprint().matches(cert3.subjectKey));
+	t.ok(cert3.subjects[0].equals(cert.subjects[0]));
+	t.strictEqual(cert3.subjects[0].hostname, 'foobar.com');
 
 	t.end();
 });
