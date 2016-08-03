@@ -19,6 +19,8 @@ var ID_ED25519_FP = sshpk.parseFingerprint(
     'SHA256:2UeFLCUKw2lvd8O1zfINNVzE0kUcu2HJHXQr/TGHt60');
 var ID_RSA_O_FP = sshpk.parseFingerprint(
     'SHA256:sfZqx0wyXwuXhsza0Ld99+/YNEMFyubTD8fPJ1Jo7Xw');
+var ID_ECDSA_ENC_FP = sshpk.parseFingerprint(
+    'SHA256:n2/53LRiEy+DBbKltRHQC36vwRndRJve+912b8zDvow');
 
 test('PrivateKey load RSA key', function (t) {
 	var keyPem = fs.readFileSync(path.join(testDir, 'id_rsa'));
@@ -108,6 +110,35 @@ test('PrivateKey convert ssh-private rsa to pem', function (t) {
 	    'mx0T63WnX22ir+072EcMQkLDdrjWPwVHx0Cw52uA88FiC4BX74/PzB2Chi4pgTx' +
 	    'p8RVRLKYY54ze+XT12iQPBU7oVRkr+ZoM3INZshZ3MhomvEQuVUQuAWlek6LLXp' +
 	    'x+mVg8XlMS8g=');
+
+	t.end();
+});
+
+test('parse and produce encrypted ssh-private ecdsa', function (t) {
+	var keySsh = fs.readFileSync(path.join(testDir, 'id_ecdsa_enc'));
+	t.throws(function () {
+		sshpk.parsePrivateKey(keySsh, 'ssh-private');
+	});
+	t.throws(function () {
+		sshpk.parsePrivateKey(keySsh, 'ssh-private',
+		    { passphrase: 'incorrect' });
+	});
+	var key = sshpk.parsePrivateKey(keySsh, 'ssh-private',
+	    { passphrase: 'foobar' });
+	t.strictEqual(key.type, 'ecdsa');
+	t.strictEqual(key.size, 256);
+	t.ok(ID_ECDSA_ENC_FP.matches(key));
+
+	var keySsh2 = key.toBuffer('ssh-private', { passphrase: 'foobar2' });
+	t.throws(function () {
+		sshpk.parsePrivateKey(keySsh2, 'ssh-private',
+		    { passphrase: 'foobar' });
+	});
+	var key2 = sshpk.parsePrivateKey(keySsh2, 'ssh-private',
+	    { passphrase: 'foobar2' });
+	t.strictEqual(key.type, 'ecdsa');
+	t.strictEqual(key.size, 256);
+	t.ok(ID_ECDSA_ENC_FP.matches(key));
 
 	t.end();
 });
