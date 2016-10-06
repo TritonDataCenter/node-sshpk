@@ -114,6 +114,34 @@ test('PrivateKey convert ssh-private rsa to pem', function (t) {
 	t.end();
 });
 
+test('parse pkcs8 unencrypted private keys', function (t) {
+	var keyPkcs8 = fs.readFileSync(path.join(testDir, 'id_rsa8'));
+	var key = sshpk.parsePrivateKey(keyPkcs8, 'pkcs8');
+	t.strictEqual(key.type, 'rsa');
+	t.ok(ID_RSA_FP.matches(key));
+
+	var newPkcs8 = key.toBuffer('pkcs8');
+	t.strictEqual(keyPkcs8.toString(), newPkcs8.toString());
+
+	keyPkcs8 = fs.readFileSync(path.join(testDir, 'id_ecdsa8'));
+	key = sshpk.parsePrivateKey(keyPkcs8, 'pkcs8');
+	t.strictEqual(key.type, 'ecdsa');
+	t.ok(ID_ECDSA_FP.matches(key));
+
+	newPkcs8 = key.toBuffer('pkcs8');
+	t.strictEqual(keyPkcs8.toString(), newPkcs8.toString());
+
+	keyPkcs8 = fs.readFileSync(path.join(testDir, 'id_dsa8'));
+	key = sshpk.parsePrivateKey(keyPkcs8, 'pkcs8');
+	t.strictEqual(key.type, 'dsa');
+	t.ok(ID_DSA_FP.matches(key));
+
+	newPkcs8 = key.toBuffer('pkcs8');
+	t.strictEqual(keyPkcs8.toString(), newPkcs8.toString());
+
+	t.end();
+});
+
 test('parse and produce encrypted ssh-private ecdsa', function (t) {
 	var keySsh = fs.readFileSync(path.join(testDir, 'id_ecdsa_enc'));
 	t.throws(function () {
