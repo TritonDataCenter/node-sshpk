@@ -262,6 +262,101 @@ function genTests() {
 		kid.stdin.write(certPem);
 		kid.stdin.end();
 	});
+
+	test('make a self-signed cert with utf8 chars', function (t) {
+		var pem = fs.readFileSync(path.join(testDir, 'id_' + algo));
+		var key = sshpk.parsePrivateKey(pem, 'pkcs1');
+
+		var id = sshpk.identityFromDN('cn=おはよう');
+		var cert = sshpk.createSelfSignedCertificate(id, key);
+		var certPem = cert.toBuffer('pem');
+
+		fs.writeFileSync(path.join(tmp, 'ca.pem'), certPem);
+
+		var kid = spawn('openssl', ['verify',
+		    '-CAfile', path.join(tmp, 'ca.pem')]);
+		var bufs = [];
+		kid.stdout.on('data', bufs.push.bind(bufs));
+		kid.on('close', function (rc) {
+			t.equal(rc, 0);
+			var output = Buffer.concat(bufs).toString();
+			t.strictEqual(output.trim(), 'stdin: OK');
+			t.end();
+		});
+		kid.stdin.write(certPem);
+		kid.stdin.end();
+	});
+
+	test('verify a self-signed cert with utf8 chars', function (t) {
+		var pem = fs.readFileSync(path.join(testDir, 'id_' + algo));
+		var key = sshpk.parsePrivateKey(pem, 'pkcs1');
+
+		var id = sshpk.identityFromDN('cn=おはよう');
+		var cert = sshpk.createSelfSignedCertificate(id, key);
+		var certPem = cert.toBuffer('pem');
+
+		var kid = spawn('openssl', ['asn1parse']);
+		var bufs = [];
+		kid.stdout.on('data', bufs.push.bind(bufs));
+		kid.on('close', function (rc) {
+			t.equal(rc, 0);
+			var output = Buffer.concat(bufs).toString('utf8');
+			var lines = output.split('\n');
+			var foundString = false;
+			lines.forEach(function (line) {
+				if (line.indexOf('おはよう') !== -1) {
+					t.strictEqual(
+					    line.indexOf('PRINTABLESTRING'),
+					    -1);
+					t.strictEqual(
+					    line.indexOf('IA5STRING'),
+					    -1);
+					t.notStrictEqual(
+					    line.indexOf('UTF8STRING'), -1);
+					foundString = true;
+				}
+			});
+			t.ok(foundString);
+			t.end();
+		});
+		kid.stdin.write(certPem);
+		kid.stdin.end();
+	});
+
+	test('make a self-signed cert with non-printable chars', function (t) {
+		var pem = fs.readFileSync(path.join(testDir, 'id_' + algo));
+		var key = sshpk.parsePrivateKey(pem, 'pkcs1');
+
+		var id = sshpk.identityFromDN('cn=foo_bar@');
+		var cert = sshpk.createSelfSignedCertificate(id, key);
+		var certPem = cert.toBuffer('pem');
+
+		var kid = spawn('openssl', ['asn1parse']);
+		var bufs = [];
+		kid.stdout.on('data', bufs.push.bind(bufs));
+		kid.on('close', function (rc) {
+			t.equal(rc, 0);
+			var output = Buffer.concat(bufs).toString('utf8');
+			var lines = output.split('\n');
+			var foundString = false;
+			lines.forEach(function (line) {
+				if (line.indexOf('foo_bar@') !== -1) {
+					t.strictEqual(
+					    line.indexOf('PRINTABLESTRING'),
+					    -1);
+					t.strictEqual(
+					    line.indexOf('UTF8STRING'), -1);
+					t.notStrictEqual(
+					    line.indexOf('IA5STRING'), -1);
+					foundString = true;
+				}
+			});
+			t.ok(foundString);
+			t.end();
+		});
+		kid.stdin.write(certPem);
+		kid.stdin.end();
+	});
 });
 
 test('teardown', function (t) {
