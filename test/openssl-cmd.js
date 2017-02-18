@@ -244,7 +244,8 @@ function genTests() {
 		var key = sshpk.parsePrivateKey(pem, 'pkcs1');
 
 		var id = sshpk.identityFromDN('cn=' + algo);
-		var cert = sshpk.createSelfSignedCertificate(id, key);
+		var cert = sshpk.createSelfSignedCertificate(id, key,
+		    { purposes: ['ca'] });
 		var certPem = cert.toBuffer('pem');
 
 		fs.writeFileSync(path.join(tmp, 'ca.pem'), certPem);

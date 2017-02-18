@@ -233,6 +233,16 @@ test('napoleon cert (generalizedtime) (x509)', function (t) {
 	t.end();
 });
 
+test('example cert: digicert ca (x509)', function (t) {
+	var cert = sshpk.parseCertificate(
+	    fs.readFileSync(path.join(testDir, 'digicert-ca.crt')), 'x509');
+	t.strictEqual(cert.subjectKey.type, 'rsa');
+	t.strictEqual(cert.subjects.length, 1);
+	t.deepEqual(cert.purposes.sort(),
+	    ['ca', 'clientAuth', 'crl', 'serverAuth', 'signature']);
+	t.end();
+});
+
 test('example cert: digicert (x509)', function (t) {
 	var cert = sshpk.parseCertificate(
 	    fs.readFileSync(path.join(testDir, 'digicert.pem')), 'pem');
@@ -254,6 +264,8 @@ test('example cert: joyent (x509)', function (t) {
 	t.strictEqual(cert.subjectKey.type, 'rsa');
 	t.strictEqual(cert.subjects[0].type, 'host');
 	t.strictEqual(cert.subjects[0].hostname, '*.joyent.com');
+	t.deepEqual(cert.purposes.sort(),
+	    ['clientAuth', 'keyEncryption', 'serverAuth', 'signature']);
 
 	var fp = sshpk.parseFingerprint(
 	    'SHA1:6UMWRUe9vr93cg8AGS7Nwl1XOAA',
