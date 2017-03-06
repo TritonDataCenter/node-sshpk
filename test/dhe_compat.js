@@ -1,4 +1,4 @@
-// Copyright 2015 Joyent, Inc.  All rights reserved.
+// Copyright 2017 Joyent, Inc.  All rights reserved.
 
 var test = require('tape').test;
 
@@ -54,33 +54,33 @@ test('setup', function (t) {
 });
 
 test('ecdhe shared secret', function (t) {
-	var dh1 = new sshpk_dhe(EC_KEY);
+	var dh1 = new sshpk_dhe.DiffieHellman(EC_KEY);
 	var secret1 = dh1.computeSecret(EC2_KEY.toPublic());
 	t.ok(Buffer.isBuffer(secret1));
 	t.deepEqual(secret1, new Buffer(
 	    'UoKiio/gnWj4BdV41YvoHu9yhjynGBmphZ1JFbpk30o=', 'base64'));
 
-	var dh2 = new sshpk_dhe(EC2_KEY);
+	var dh2 = new sshpk_dhe.DiffieHellman(EC2_KEY);
 	var secret2 = dh2.computeSecret(EC_KEY.toPublic());
 	t.deepEqual(secret1, secret2);
 	t.end();
 });
 
 test('ecdhe generate ephemeral', function (t) {
-	var dh = new sshpk_dhe(EC_KEY);
+	var dh = new sshpk_dhe.DiffieHellman(EC_KEY);
 	var ek = dh.generateKey();
 	t.ok(ek instanceof sshpk.PrivateKey);
 	t.strictEqual(ek.type, 'ecdsa');
 	t.strictEqual(ek.curve, 'nistp256');
 
 	var secret1 = dh.computeSecret(EC_KEY);
-	var secret2 = (new sshpk_dhe(EC_KEY)).computeSecret(ek);
+	var secret2 = (new sshpk_dhe.DiffieHellman(EC_KEY)).computeSecret(ek);
 	t.deepEqual(secret1, secret2);
 	t.end();
 });
 
 test('ecdhe reject diff curves', function (t) {
-	var dh = new sshpk_dhe(EC_KEY);
+	var dh = new sshpk_dhe.DiffieHellman(EC_KEY);
 	t.throws(function () {
 		dh.computeSecret(ECOUT_KEY.toPublic());
 	});
@@ -93,12 +93,12 @@ test('ecdhe reject diff curves', function (t) {
 	t.strictEqual(dh.getPublicKey().fingerprint().toString(),
 	    EC2_KEY.fingerprint().toString());
 
-	var dh2 = new sshpk_dhe(ECOUT_KEY);
+	var dh2 = new sshpk_dhe.DiffieHellman(ECOUT_KEY);
 	t.throws(function () {
 		dh2.setKey(EC_KEY);
 	});
 
-	dh2 = new sshpk_dhe(EC_KEY);
+	dh2 = new sshpk_dhe.DiffieHellman(EC_KEY);
 	t.throws(function () {
 		dh2.setKey(C_KEY);
 	});

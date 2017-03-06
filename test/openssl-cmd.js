@@ -1,4 +1,4 @@
-// Copyright 2015 Joyent, Inc.  All rights reserved.
+// Copyright 2017 Joyent, Inc.  All rights reserved.
 
 var test = require('tape').test;
 var sshpk = require('../lib/index');
@@ -353,6 +353,35 @@ function genTests() {
 				}
 			});
 			t.ok(foundString);
+			t.end();
+		});
+		kid.stdin.write(certPem);
+		kid.stdin.end();
+	});
+
+	test('make a self-signed cert with generated key', function (t) {
+		if (algo !== 'ecdsa') {
+			t.end();
+			return;
+		}
+
+		var key = sshpk.generatePrivateKey(algo);
+
+		var id = sshpk.identityFromDN('cn=' + algo);
+		var cert = sshpk.createSelfSignedCertificate(id, key,
+		    { purposes: ['ca'] });
+		var certPem = cert.toBuffer('pem');
+
+		fs.writeFileSync(path.join(tmp, 'ca.pem'), certPem);
+
+		var kid = spawn('openssl', ['verify',
+		    '-CAfile', path.join(tmp, 'ca.pem')]);
+		var bufs = [];
+		kid.stdout.on('data', bufs.push.bind(bufs));
+		kid.on('close', function (rc) {
+			t.equal(rc, 0);
+			var output = Buffer.concat(bufs).toString();
+			t.strictEqual(output.trim(), 'stdin: OK');
 			t.end();
 		});
 		kid.stdin.write(certPem);

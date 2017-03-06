@@ -1,4 +1,4 @@
-// Copyright 2015 Joyent, Inc.  All rights reserved.
+// Copyright 2017 Joyent, Inc.  All rights reserved.
 
 var test = require('tape').test;
 var sshpk = require('../lib/index');
@@ -253,8 +253,65 @@ test('PrivateKey#createSign on ECDSA 256 key', function (t) {
 	t.end();
 });
 
+test('PrivateKey.generate ecdsa default', function (t) {
+	var key = sshpk.generatePrivateKey('ecdsa');
+	t.ok(sshpk.PrivateKey.isPrivateKey(key));
+	t.strictEqual(key.type, 'ecdsa');
+	t.strictEqual(key.curve, 'nistp256');
+	t.strictEqual(key.size, 256);
+
+	var s = key.createSign('sha256');
+	s.update('foobar');
+	var sig = s.sign();
+	t.ok(sig);
+	t.ok(sig instanceof sshpk.Signature);
+
+	var key2 = sshpk.parsePrivateKey(key.toBuffer('pem'));
+
+	var v = key2.createVerify('sha256');
+	v.update('foobar');
+	t.ok(v.verify(sig));
+
+	var key3 = sshpk.generatePrivateKey('ecdsa');
+	t.ok(!key3.fingerprint().matches(key));
+
+	t.end();
+});
+
+test('PrivateKey.generate ecdsa p-384', function (t) {
+	var key = sshpk.generatePrivateKey('ecdsa', { curve: 'nistp384' });
+	t.ok(sshpk.PrivateKey.isPrivateKey(key));
+	t.strictEqual(key.type, 'ecdsa');
+	t.strictEqual(key.curve, 'nistp384');
+	t.strictEqual(key.size, 384);
+	t.end();
+});
+
 if (process.version.match(/^v0\.[0-9]\./))
 	return;
+
+test('PrivateKey.generate ed25519', function (t) {
+	var key = sshpk.generatePrivateKey('ed25519');
+	t.ok(sshpk.PrivateKey.isPrivateKey(key));
+	t.strictEqual(key.type, 'ed25519');
+	t.strictEqual(key.size, 256);
+
+	var s = key.createSign('sha512');
+	s.update('foobar');
+	var sig = s.sign();
+	t.ok(sig);
+	t.ok(sig instanceof sshpk.Signature);
+
+	var sshPub = key.toPublic().toBuffer('ssh');
+	var key2 = sshpk.parseKey(sshPub);
+	t.ok(key2.fingerprint().matches(key));
+
+	var v = key2.createVerify('sha512');
+	v.update('foobar');
+	t.ok(v.verify(sig));
+
+	t.end();
+});
 
 test('PrivateKey#createSign on ED25519 key', function (t) {
 	var s = KEY_ED25519.createSign('sha512');
