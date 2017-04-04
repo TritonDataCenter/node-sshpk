@@ -331,3 +331,14 @@ test('example cert: lots of SAN (x509)', function (t) {
 	}));
 	t.end();
 });
+
+test('example cert: openssh rsa with sha256 (7.0p1+)', function (t) {
+	var cert = sshpk.parseCertificate(
+	    fs.readFileSync(path.join(testDir, 'openssh-rsa256.pub')),
+	    'openssh');
+	t.strictEqual(cert.subjectKey.type, 'rsa');
+	t.ok(cert.isSignedByKey(cert.subjectKey));
+	t.strictEqual(cert.signatures.openssh.signature.hashAlgorithm,
+	    'sha256');
+	t.end();
+});
