@@ -10,6 +10,7 @@ var sinon = require('sinon');
 
 var ED_KEY, ED2_KEY, EC_KEY, EC2_KEY, ECOUT_KEY, DS_KEY, DS2_KEY, DSOUT_KEY;
 var C_KEY, C2_KEY;
+var NG_KEY;
 var C_SSH;
 
 var testDir = path.join(__dirname, 'assets');
@@ -31,6 +32,8 @@ test('setup', function (t) {
 	DS2_KEY = sshpk.parsePrivateKey(k);
 	k = fs.readFileSync(path.join(testDir, 'id_dsa'));
 	DSOUT_KEY = sshpk.parsePrivateKey(k);
+	k = fs.readFileSync(path.join(testDir, 'ed25519-negative'));
+	NG_KEY = sshpk.parsePrivateKey(k);
 	t.end();
 });
 
@@ -40,6 +43,17 @@ test('derive ed25519 -> curve25519', function (t) {
 	t.strictEqual(C_KEY.size, 256);
 	C_SSH = C_KEY.toBuffer('ssh');
 	C2_KEY = ED2_KEY.derive('curve25519');
+	t.end();
+});
+
+test('derive ed25519 -> curve25519 -> back (negative seed)', function (t) {
+	var key = NG_KEY.derive('curve25519');
+	t.strictEqual(key.type, 'curve25519');
+	t.strictEqual(key.size, 256);
+	var key2 = key.derive('ed25519');
+	t.ok(key2.fingerprint().matches(NG_KEY));
+	t.strictEqual(key2.part.r.toString('base64'),
+	    key.part.r.toString('base64'));
 	t.end();
 });
 
