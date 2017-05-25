@@ -222,10 +222,12 @@ function genTests() {
 			var output = Buffer.concat(bufs).toString();
 
 			var m = output.match(/Issuer: (.*)$/m);
-			t.strictEqual(m[1], 'CN=' + algo + ', C=US');
+			t.strictEqual(m[1].replace(/ = /g, '='),
+			    'CN=' + algo + ', C=US');
 
 			m = output.match(/Subject: (.*)$/m);
-			t.strictEqual(m[1], 'CN=' + algo + ', C=US');
+			t.strictEqual(m[1].replace(/ = /g, '='),
+			    'CN=' + algo + ', C=US');
 
 			var re = /DNS:([^, \n]+)([, ]+|$)/gm;
 			m = re.exec(output);
