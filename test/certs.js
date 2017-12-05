@@ -229,6 +229,17 @@ test('napoleon cert (generalizedtime) (x509)', function (t) {
 	console.log(cert.validFrom.getTime());
 	console.log(cert.validUntil.getTime());
 	t.ok(!cert.isExpired(new Date('1775-03-01T00:00Z')));
+	t.deepEqual(cert.subjects[0].toArray(), [
+		{ name: 'c', value: 'FR' },
+		{ name: 's', value: 'Île-de-France' },
+		{ name: 'l', value: 'Paris' },
+		{ name: 'o', value: 'Hereditary Monarchy' },
+		{ name: 'ou', value: 'Head of State' },
+		{ name: 'emailAddress', value: 'nappi@greatfrenchempire.fr' },
+		{ name: 'cn', value: 'Emperor Napoleon I' },
+		{ name: 'sn', value: 'Bonaparte' },
+		{ name: 'gn', value: 'Napoleon' }
+	]);
 	t.end();
 });
 
@@ -250,6 +261,8 @@ test('example cert: digicert (x509)', function (t) {
 	t.strictEqual(cert.subjects[0].hostname, 'www.digicert.com');
 	t.strictEqual(cert.issuer.cn,
 	    'DigiCert SHA2 Extended Validation Server CA');
+	t.strictEqual(cert.issuer.get('c'), 'US');
+	t.strictEqual(cert.issuer.get('o'), 'DigiCert Inc');
 
 	var cacert = sshpk.parseCertificate(
 	    fs.readFileSync(path.join(testDir, 'digicert-ca.crt')), 'x509');
@@ -353,6 +366,23 @@ test('example cert: ed25519 cert from curdle-pkix-04', function (t) {
 	var key = sshpk.parsePrivateKey(
 	    fs.readFileSync(path.join(testDir, 'ed25519-pkix.pem')), 'pem');
 	t.ok(cert.isSignedByKey(key));
+
+	t.end();
+});
+
+test('cert with doubled-up DN attribute', function (t) {
+	var cert = sshpk.parseCertificate(
+	    fs.readFileSync(path.join(testDir, 'double-title-cert.pem')),
+	    'pem');
+
+	var id = cert.subjects[0];
+	t.throws(function () {
+		id.get('title');
+	});
+	t.deepEqual(id.get('title', true), ['in-zone.key', 'in-zone.key']);
+
+	t.strictEqual(id.get('ou'), 'delegated');
+	t.strictEqual(id.get('cn'), '2dc79d36-ea01-c855-eab5-e2c7a24abbf4');
 
 	t.end();
 });
