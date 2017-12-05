@@ -20,6 +20,27 @@ FPS.ecdsa = sshpk.parseFingerprint(
 FPS.ecdsa2 = sshpk.parseFingerprint(
     'SHA256:Kyu0EMqH8fzfp9RXKJ6kmsk9qKGBqVRtlOuk6bXfCEU');
 
+var ASN1PARSE_LINE =
+    /^\s*([0-9]*):d=([0-9]+)\s+hl=([0-9]+)\s+l=\s*([0-9]+)\s*([a-z]+):\s*([^:\[]+)\s*(\[[^\]]+\])?\s*(:.+)?$/;
+function asn1parse_line2obj(line) {
+	var m = line.match(ASN1PARSE_LINE);
+	if (!m)
+		throw (new Error('Not a valid asn1parse output line'));
+	var obj = {
+	    offset: parseInt(m[1], 10),
+	    depth: parseInt(m[2], 10),
+	    headerLength: parseInt(m[3], 10),
+	    length: parseInt(m[4], 10),
+	    type: m[5],
+	    tag: m[6].trim()
+	};
+	if (m[7])
+		obj.valueType = m[7].slice(1, m[7].length - 1);
+	if (m[8])
+		obj.value = m[8].slice(1);
+	return (obj);
+}
+
 temp.track();
 
 test('openssl version', function (t) {
@@ -306,19 +327,21 @@ function genTests() {
 			var output = Buffer.concat(bufs).toString('utf8');
 			var lines = output.split('\n');
 			var foundString = false;
-			lines.forEach(function (line) {
-				if (line.indexOf('おはよう') !== -1) {
-					t.strictEqual(
-					    line.indexOf('PRINTABLESTRING'),
-					    -1);
-					t.strictEqual(
-					    line.indexOf('IA5STRING'),
-					    -1);
-					t.notStrictEqual(
-					    line.indexOf('UTF8STRING'), -1);
+			for (var i = 0; i < lines.length; ++i) {
+				if (!lines[i])
+					continue;
+				var line = asn1parse_line2obj(lines[i]);
+				if (line.tag === 'OBJECT' &&
+				    line.value === 'commonName') {
+					var nline = asn1parse_line2obj(
+					    lines[i + 1]);
+					t.strictEqual(nline.value,
+					    'おはよう', 'CN should be set');
+					t.strictEqual(nline.tag, 'UTF8STRING',
+					    'CN should be a utf8string');
 					foundString = true;
 				}
-			});
+			}
 			t.ok(foundString);
 			t.end();
 		});
@@ -342,18 +365,21 @@ function genTests() {
 			var output = Buffer.concat(bufs).toString('utf8');
 			var lines = output.split('\n');
 			var foundString = false;
-			lines.forEach(function (line) {
-				if (line.indexOf('foo_bar@') !== -1) {
-					t.strictEqual(
-					    line.indexOf('PRINTABLESTRING'),
-					    -1);
-					t.strictEqual(
-					    line.indexOf('UTF8STRING'), -1);
-					t.notStrictEqual(
-					    line.indexOf('IA5STRING'), -1);
+			for (var i = 0; i < lines.length; ++i) {
+				if (!lines[i])
+					continue;
+				var line = asn1parse_line2obj(lines[i]);
+				if (line.tag === 'OBJECT' &&
+				    line.value === 'commonName') {
+					var nline = asn1parse_line2obj(
+					    lines[i + 1]);
+					t.strictEqual(nline.value,
+					    'foo_bar@', 'CN should be set');
+					t.strictEqual(nline.tag, 'IA5STRING',
+					    'CN should be a ia5string');
 					foundString = true;
 				}
-			});
+			}
 			t.ok(foundString);
 			t.end();
 		});
@@ -389,6 +415,45 @@ function genTests() {
 		kid.stdin.write(certPem);
 		kid.stdin.end();
 	});
+});
+
+test('nulls in x509 rsa certs (#39)', function (t) {
+	var pem = fs.readFileSync(path.join(testDir, 'id_rsa'));
+	var key = sshpk.parsePrivateKey(pem, 'pkcs1');
+
+	var id = sshpk.identityFromDN('cn=foobar');
+	var cert = sshpk.createSelfSignedCertificate(id, key);
+	var certPem = cert.toBuffer('pem');
+
+	var kid = spawn('openssl', ['asn1parse']);
+	var bufs = [];
+	kid.stdout.on('data', bufs.push.bind(bufs));
+	kid.on('close', function (rc) {
+		t.equal(rc, 0, 'openssl command exit status 0');
+		var output = Buffer.concat(bufs).toString('utf8');
+		var lines = output.split('\n');
+		var found = false;
+		for (var i = 0; i < lines.length; ++i) {
+			if (lines[i].length < 1)
+				continue;
+			var line = asn1parse_line2obj(lines[i]);
+			if (line.type === 'prim' && line.tag === 'OBJECT' &&
+			    line.value === 'sha256WithRSAEncryption') {
+				var nline = asn1parse_line2obj(lines[i + 1]);
+				t.strictEqual(nline.tag, 'NULL',
+				    'null value must follow RSA OID');
+				t.strictEqual(nline.type, 'prim',
+				    'null should be primitive');
+				t.strictEqual(nline.depth, line.depth,
+				    'null should be at same depth as RSA OID');
+				found = true;
+			}
+		}
+		t.ok(found, 'should have an RSA OID');
+		t.end();
+	});
+	kid.stdin.write(certPem);
+	kid.stdin.end();
 });
 
 test('utf8string in issuer DN (#40)', function (t) {
