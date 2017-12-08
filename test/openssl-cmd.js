@@ -391,6 +391,60 @@ function genTests() {
 	});
 });
 
+test('utf8string in issuer DN (#40)', function (t) {
+	var pem = fs.readFileSync(path.join(testDir, 'id_rsa'));
+	var ikey = sshpk.parsePrivateKey(pem, 'pkcs1');
+
+	var certpem = fs.readFileSync(path.join(testDir, 'jim-x509-utf8.pem'));
+	var issucert = sshpk.parseCertificate(certpem, 'pem');
+
+	var issuid = issucert.subjects[0];
+	var id = sshpk.identityFromDN('cn=foo_bar@');
+	var key = sshpk.generatePrivateKey('ecdsa');
+
+	var cert = sshpk.createCertificate(issuid, ikey, id, key);
+	var certPem = cert.toBuffer('pem');
+
+	var kid = spawn('openssl', ['asn1parse']);
+	var bufs = [];
+	kid.stdout.on('data', bufs.push.bind(bufs));
+	kid.on('close', function (rc) {
+		t.equal(rc, 0, 'openssl exited with 0 status');
+		var output = Buffer.concat(bufs).toString('utf8');
+		var lines = output.split('\n');
+		var foundString = false;
+		lines.forEach(function (line) {
+			if (line.indexOf('foo_bar@') !== -1) {
+				t.strictEqual(
+				    line.indexOf('PRINTABLESTRING'),
+				    -1, 'subject CN is printablestring');
+				t.strictEqual(
+				    line.indexOf('UTF8STRING'), -1,
+				    'subject CN is not utf8string');
+				t.notStrictEqual(
+				    line.indexOf('IA5STRING'), -1,
+				    'subject CN is not ia5string');
+			}
+			if (line.indexOf('a test string') !== -1) {
+				t.notStrictEqual(
+				    line.indexOf('UTF8STRING'),
+				    -1, 'issuer CN is utf8string');
+				t.strictEqual(
+				    line.indexOf('PRINTABLESTRING'), -1,
+				    'issuer CN is not printablestring');
+				t.strictEqual(
+				    line.indexOf('IA5STRING'), -1,
+				    'issuer CN is not ia5string');
+				foundString = true;
+			}
+		});
+		t.ok(foundString, 'found the issuer CN');
+		t.end();
+	});
+	kid.stdin.write(certPem);
+	kid.stdin.end();
+});
+
 test('teardown', function (t) {
     temp.cleanup(function () {
         t.end();
