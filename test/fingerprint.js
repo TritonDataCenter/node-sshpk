@@ -116,7 +116,7 @@ test('invalid fingerprints', function(t) {
 	}, sshpk.FingerprintFormatError);
 	t.throws(function () {
 		var fp = sshpk.parseFingerprint(
-		    '59:a4:61:0e:38:18:9f:0f:28:58:2a:27:f7:65:c5:878');
+		    '59:a4:61:0e:38:18:9f:0f:28:58:2a:27:f7:65:c5:8g');
 	}, sshpk.FingerprintFormatError);
 	t.end();
 });
