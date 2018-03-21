@@ -3,6 +3,7 @@
 var test = require('tape').test;
 
 var sshpk = require('../lib/index');
+var Buffer = require('safer-buffer').Buffer;
 
 ///--- Globals
 var SSH_1024 = 'ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAIEAvad19ePSDckmgmo6Unqmd8' +
@@ -173,7 +174,7 @@ var ECDSA_PEM = '-----BEGIN PUBLIC KEY-----\n' +
     '/aMP2QJ2bY6cTDbegg81Yo/PKMtYKkn1Tu+vD8ZjVBL8g2qjbMpc0yryIQ==\n' +
     '-----END PUBLIC KEY-----\n';
 
-var RFC_AUTO = new Buffer('AAAAC3NzaC1lZDI1NTE5AAAAIEi0pkfPe/+kbmnTSH0mfr0J' +
+var RFC_AUTO = Buffer.from('AAAAC3NzaC1lZDI1NTE5AAAAIEi0pkfPe/+kbmnTSH0mfr0J' +
     '4Fq7M7bshFAKB6uCyLDm', 'base64');
 
 ///--- Tests
@@ -259,7 +260,7 @@ test('256bit ecdsa as auto from string', function(t) {
 });
 
 test('256bit ecdsa as auto from buffer', function(t) {
-	var k = sshpk.parseKey(new Buffer('  ' + ECDSA_SSH), 'auto');
+	var k = sshpk.parseKey(Buffer.from('  ' + ECDSA_SSH), 'auto');
 	t.equal(k.toString('pem'), ECDSA_PEM);
 	t.end();
 });

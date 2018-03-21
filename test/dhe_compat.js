@@ -8,6 +8,7 @@ var fs = require('fs');
 var path = require('path');
 var crypto = require('crypto');
 var sinon = require('sinon');
+var Buffer = require('safer-buffer').Buffer;
 
 /* No need to do these on an older node */
 if (crypto.createECDH === undefined)
@@ -57,7 +58,7 @@ test('ecdhe shared secret', function (t) {
 	var dh1 = new sshpk_dhe.DiffieHellman(EC_KEY);
 	var secret1 = dh1.computeSecret(EC2_KEY.toPublic());
 	t.ok(Buffer.isBuffer(secret1));
-	t.deepEqual(secret1, new Buffer(
+	t.deepEqual(secret1, Buffer.from(
 	    'UoKiio/gnWj4BdV41YvoHu9yhjynGBmphZ1JFbpk30o=', 'base64'));
 
 	var dh2 = new sshpk_dhe.DiffieHellman(EC2_KEY);

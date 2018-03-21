@@ -2,9 +2,10 @@
 
 var test = require('tape').test;
 var SSHBuffer = require('../lib/ssh-buffer');
+var Buffer = require('safer-buffer').Buffer;
 
 test('expands on write', function(t) {
-	var buf = new SSHBuffer({buffer: new Buffer(8)});
+	var buf = new SSHBuffer({buffer: Buffer.alloc(8)});
 	buf.writeCString('abc123');
 	buf.writeInt(42);
 	buf.writeString('hi there what is up');
