@@ -7,6 +7,7 @@ var fs = require('fs');
 var path = require('path');
 var crypto = require('crypto');
 var sinon = require('sinon');
+var Buffer = require('safer-buffer').Buffer;
 
 var ED_KEY, ED2_KEY, EC_KEY, EC2_KEY, ECOUT_KEY, DS_KEY, DS2_KEY, DSOUT_KEY;
 var C_KEY, C2_KEY;
@@ -108,7 +109,7 @@ test('ecdhe shared secret', function (t) {
 	var dh1 = EC_KEY.createDH();
 	var secret1 = dh1.computeSecret(EC2_KEY.toPublic());
 	t.ok(Buffer.isBuffer(secret1));
-	t.deepEqual(secret1, new Buffer(
+	t.deepEqual(secret1, Buffer.from(
 	    'UoKiio/gnWj4BdV41YvoHu9yhjynGBmphZ1JFbpk30o=', 'base64'));
 
 	var dh2 = EC2_KEY.createDH();
