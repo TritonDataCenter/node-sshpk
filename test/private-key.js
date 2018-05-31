@@ -241,6 +241,22 @@ test('parse and produce encrypted ssh-private ecdsa', function (t) {
 	t.end();
 });
 
+test('pem pkcs#5 encrypted with aes-256-cbc', function (t) {
+	var keyPem = fs.readFileSync(path.join(testDir, 'p50key.pem'));
+	t.throws(function () {
+		sshpk.parsePrivateKey(keyPem, 'pem');
+	});
+	t.throws(function () {
+		sshpk.parsePrivateKey(keyPem, 'pem',
+		    { passphrase: 'incorrect' });
+	});
+	var key = sshpk.parsePrivateKey(keyPem, 'pem',
+	    { passphrase: 'pass' });
+	t.strictEqual(key.type, 'rsa');
+	t.strictEqual(key.size, 2048);
+	t.end();
+});
+
 var KEY_RSA, KEY_DSA, KEY_ECDSA, KEY_ECDSA2, KEY_ED25519;
 
 test('setup keys', function (t) {
