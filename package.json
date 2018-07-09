@@ -8,7 +8,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/arekinath/node-sshpk.git"
+    "url": "git+https://github.com/joyent/node-sshpk.git"
   },
   "author": "Joyent, Inc",
   "contributors": [
