@@ -212,7 +212,12 @@ function genTests() {
 		var bufs = [];
 		kid.stdout.on('data', bufs.push.bind(bufs));
 		kid.on('close', function (rc) {
-			t.equal(rc, 0);
+			t.equal(rc, 0, 'openssl exited 0');
+			if (bufs.length === 0) {
+				t.fail('"openssl dgst" wrote no output');
+				t.end();
+				return;
+			}
 			var output = Buffer.concat(bufs);
 			var sig = sshpk.parseSignature(output, algo, 'asn1');
 			t.ok(sig);
