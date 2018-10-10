@@ -507,6 +507,24 @@ is valid for. The possible strings at the moment are:
              Authority)
  * `'crl'` -- key can be used to sign Certificate Revocation Lists (CRLs)
 
+### `Certificate#getExtension(nameOrOid)`
+
+Retrieves information about a certificate extension, if present, or returns
+`undefined` if not. The string argument `nameOrOid` should be either the OID
+(for X509 extensions) or the name (for OpenSSH extensions) of the extension
+to retrieve.
+
+The object returned will have the following properties:
+
+ * `format` -- String, set to either `'x509'` or `'openssh'`
+ * `name` or `oid` -- String, only one set based on value of `format`
+ * `data` -- Buffer, the raw data inside the extension
+
+### `Certificate#getExtensions()`
+
+Returns an Array of all present certificate extensions, in the same manner and
+format as `getExtension()`.
+
 ### `Certificate#isExpired([when])`
 
 Tests whether the Certificate is currently expired (i.e. the `validFrom` and

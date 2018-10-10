@@ -7,6 +7,8 @@ var fs = require('fs');
 var path = require('path');
 var crypto = require('crypto');
 var sinon = require('sinon');
+var asn1 = require('asn1');
+var SSHBuffer = require('../lib/ssh-buffer');
 
 var testDir = path.join(__dirname, 'assets');
 
@@ -250,6 +252,17 @@ test('example cert: digicert ca (x509)', function (t) {
 	t.strictEqual(cert.subjects.length, 1);
 	t.deepEqual(cert.purposes.sort(),
 	    ['ca', 'clientAuth', 'crl', 'serverAuth', 'signature']);
+	var exts = cert.getExtensions();
+	t.strictEqual(exts.length, 8);
+	exts.forEach(function (ext) {
+		t.strictEqual(ext.format, 'x509');
+		t.strictEqual(typeof (ext.oid), 'string');
+	});
+	var basicExt = cert.getExtension('2.5.29.19');
+	t.strictEqual(basicExt.oid, '2.5.29.19');
+	t.strictEqual(basicExt.critical, true);
+	t.strictEqual(basicExt.format, 'x509');
+	t.strictEqual(basicExt.pathLen, 0);
 	t.end();
 });
 
@@ -383,6 +396,50 @@ test('cert with doubled-up DN attribute', function (t) {
 
 	t.strictEqual(id.get('ou'), 'delegated');
 	t.strictEqual(id.get('cn'), '2dc79d36-ea01-c855-eab5-e2c7a24abbf4');
+
+	t.end();
+});
+
+test('example cert: yubikey attestation cert', function (t) {
+	var cert = sshpk.parseCertificate(
+	    fs.readFileSync(path.join(testDir, 'yubikey.pem')),
+	    'pem');
+	t.strictEqual(cert.subjectKey.type, 'ecdsa');
+	t.strictEqual(cert.subjects[0].cn, 'YubiKey PIV Attestation 9e');
+
+	var serialExt = cert.getExtension('1.3.6.1.4.1.41482.3.7');
+	t.ok(serialExt);
+	var der = new asn1.Ber.Reader(serialExt.data);
+	t.strictEqual(der.readInt(), 5213681);
+
+	var policyExt = cert.getExtension('1.3.6.1.4.1.41482.3.8');
+	t.ok(policyExt);
+	t.strictEqual(policyExt.data[0], 0x01); /* never require PIN */
+	t.strictEqual(policyExt.data[1], 0x01); /* never require touch */
+
+	t.end();
+});
+
+test('example cert: openssh extensions', function (t) {
+	var cert = sshpk.parseCertificate(
+	    fs.readFileSync(path.join(testDir, 'openssh-exts.pub')),
+	    'openssh');
+	t.strictEqual(cert.subjectKey.type, 'ecdsa');
+	t.strictEqual(cert.subjects[0].uid, 'foo');
+
+	var forceCmdExt = cert.getExtension('force-command');
+	t.ok(forceCmdExt);
+	t.strictEqual(forceCmdExt.name, 'force-command');
+	t.strictEqual(forceCmdExt.critical, true);
+
+	var cmdbuf = new SSHBuffer({ buffer: forceCmdExt.data });
+	var cmd = cmdbuf.readString();
+	t.strictEqual(cmd, 'foobarcmd');
+	t.ok(cmdbuf.atEnd());
+
+	t.ok(cert.getExtension('permit-port-forwarding'));
+	t.notOk(cert.getExtension('source-address'));
+	t.notOk(cert.getExtension('permit-pty'));
 
 	t.end();
 });
