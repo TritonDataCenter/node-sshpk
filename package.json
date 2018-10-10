@@ -43,13 +43,13 @@
     "assert-plus": "^1.0.0",
     "dashdash": "^1.12.0",
     "getpass": "^0.1.1",
-    "safer-buffer": "^2.0.2"
-  },
-  "optionalDependencies": {
+    "safer-buffer": "^2.0.2",
     "jsbn": "~0.1.0",
     "tweetnacl": "~0.14.0",
     "ecc-jsbn": "~0.1.1",
     "bcrypt-pbkdf": "^1.0.0"
+  },
+  "optionalDependencies": {
   },
   "devDependencies": {
     "tape": "^3.5.0",
