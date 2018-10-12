@@ -84,6 +84,18 @@ test('fingerprint matches', function(t) {
 	    'SHA256:PYC9kPVC6J873CSIbfp0LwYeczP/W4ffObNCuDJ1u5w');
 	t.ok(f.matches(k2));
 	t.ok(!f.matches(k1));
+	var f2 = sshpk.parseFingerprint(
+	    '59:a4:61:0e:38:18:9f:0f:28:58:2a:27:f7:65:c5:87');
+	t.ok(f2.matches(k1));
+	t.ok(!f2.matches(k2));
+	var f3 = sshpk.parseFingerprint(
+	    'MD5:59:a4:61:e:38:18:9f:f:28:58:2a:27:f7:65:c5:87');
+	t.ok(f3.matches(k1));
+	t.ok(!f3.matches(k2));
+	var f4 = sshpk.parseFingerprint(
+	    'SHA1:3JP2y/wCv8KnvAunLz7EjcEhKeE');
+	t.ok(f4.matches(k1));
+	t.ok(!f4.matches(k2));
 	t.end();
 });
 
@@ -117,6 +129,10 @@ test('invalid fingerprints', function(t) {
 	t.throws(function () {
 		var fp = sshpk.parseFingerprint(
 		    '59:a4:61:0e:38:18:9f:0f:28:58:2a:27:f7:65:c5:878');
+	}, sshpk.FingerprintFormatError);
+	t.throws(function () {
+		var fp = sshpk.parseFingerprint(
+		    '59:a46:1:0e:38:18:9f:0f:28:58:2a:27:f7:65:c5:87');
 	}, sshpk.FingerprintFormatError);
 	t.end();
 });
