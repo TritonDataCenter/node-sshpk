@@ -1,6 +1,8 @@
 // Copyright 2011 Joyent, Inc.  All rights reserved.
 
 var test = require('tape').test;
+var path = require('path');
+var fs = require('fs');
 
 var sshpk = require('../lib/index');
 var Buffer = require('safer-buffer').Buffer;
@@ -177,6 +179,8 @@ var ECDSA_PEM = '-----BEGIN PUBLIC KEY-----\n' +
 var RFC_AUTO = Buffer.from('AAAAC3NzaC1lZDI1NTE5AAAAIEi0pkfPe/+kbmnTSH0mfr0J' +
     '4Fq7M7bshFAKB6uCyLDm', 'base64');
 
+var testDir = path.join(__dirname, 'assets');
+
 ///--- Tests
 
 test('1024b pem to rsa ssh key', function(t) {
@@ -339,5 +343,16 @@ test('encrypted rsa private key', function(t) {
 test('encrypted ecdsa private key with pw', function(t) {
 	var k = sshpk.parseKey(ENC_ECDSA, 'pem', { passphrase: 'asdfasdf' });
 	t.equal(k.type, 'ecdsa');
+	t.end();
+});
+
+test('encrypted rsa private key (3des)', function (t) {
+	var keyPem = fs.readFileSync(path.join(testDir, '3des.pem'));
+	var key = sshpk.parsePrivateKey(keyPem, 'pem',
+	    { passphrase: 'testing123' });
+	t.equal(key.type, 'rsa');
+	key.comment = 'test';
+	var keySsh = fs.readFileSync(path.join(testDir, '3des.pub'), 'ascii');
+	t.equal(key.toPublic().toString('ssh'), keySsh.trim());
 	t.end();
 });
