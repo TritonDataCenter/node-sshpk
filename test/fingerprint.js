@@ -1,8 +1,12 @@
-// Copyright 2011 Joyent, Inc.  All rights reserved.
+// Copyright 2018 Joyent, Inc.  All rights reserved.
 
 var test = require('tape').test;
+var fs = require('fs');
+var path = require('path');
 
 var sshpk = require('../lib/index');
+
+var testDir = path.join(__dirname, 'assets');
 
 var SSH_1024 = 'ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAIEAvad19ePSDckmgmo6Unqmd8' +
 	'n2G7o1794VN3FazVhV09yooXIuUhA+7OmT7ChiHueayxSubgL2MrO/HvvF/GGVUs/t3e0u4' +
@@ -59,6 +63,38 @@ test('sha256 fingerprint', function(t) {
 	var k = sshpk.parseKey(SSH_1024, 'ssh');
 	var fp = k.fingerprint('sha256').toString();
 	t.equal(fp, 'SHA256:n0akL6ACGYcTARqym7TL4DStmNFpxMkSlFwuCfqNP9M');
+	t.end();
+});
+
+test('spki sha256 fingerprint', function (t) {
+	var k = sshpk.parseKey(SSH_1024, 'ssh');
+	var fp2 = k.fingerprint('sha256', 'spki').toString();
+	t.equal(fp2,
+	    'c8f710c0a469a5e0cad31b10175e672665b926f4e75aad5447e9f1005a2aec93');
+	var fp = sshpk.parseFingerprint(fp2);
+	t.ok(fp.matches(k));
+	var fp3 = k.fingerprint('sha1', 'spki').toString('base64');
+	t.equal(fp3, 'HleMUmn/a1NRW5iUZsEKCe+ojTw=');
+	t.end();
+});
+
+test('fingerprints of a private key', function (t) {
+	var pem = fs.readFileSync(path.join(testDir, 'id_ecdsa'));
+	var k = sshpk.parsePrivateKey(pem, 'pem');
+	var pk = k.toPublic();
+
+	var fp1 = k.fingerprint('sha512');
+	t.ok(fp1.matches(pk));
+	var fp2 = pk.fingerprint('sha512');
+	t.ok(fp2.matches(k));
+	t.equal(fp1.toString(), fp2.toString());
+
+	var fp3 = k.fingerprint('sha256', 'spki');
+	t.ok(fp3.matches(pk));
+	var fp4 = pk.fingerprint('sha256', 'spki');
+	t.ok(fp4.matches(k));
+	t.equal(fp3.toString(), fp4.toString());
+
 	t.end();
 });
 
