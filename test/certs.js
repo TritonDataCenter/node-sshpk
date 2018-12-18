@@ -1,4 +1,4 @@
-// Copyright 2016 Joyent, Inc.  All rights reserved.
+// Copyright 2018 Joyent, Inc.  All rights reserved.
 
 var test = require('tape').test;
 
@@ -14,7 +14,7 @@ var testDir = path.join(__dirname, 'assets');
 
 var GEORGE_KEY, GEORGE_SSH, GEORGE_X509;
 var BARRY_KEY;
-var JIM_KEY, JIM_SSH, JIM_X509;
+var JIM_KEY, JIM_SSH, JIM_X509, JIM_X509_TXT;
 var EC_KEY, EC_KEY2;
 var SUE_KEY;
 
@@ -32,6 +32,7 @@ test('setup', function (t) {
 
 	JIM_SSH = fs.readFileSync(path.join(testDir, 'jim-openssh.pub'));
 	JIM_X509 = fs.readFileSync(path.join(testDir, 'jim-x509.pem'));
+	JIM_X509_TXT = fs.readFileSync(path.join(testDir, 'jim-x509-text.pem'));
 
 	d = fs.readFileSync(path.join(testDir, 'id_ecdsa'));
 	EC_KEY = sshpk.parsePrivateKey(d);
@@ -133,6 +134,14 @@ test('rsa x509 cert self-signed', function (t) {
 	t.ok(cert.issuer.equals(cert.subjects[0]));
 	t.ok(cert.isSignedBy(cert));
 
+	t.end();
+});
+
+test('x509 pem cert with extra text', function (t) {
+	var cert = sshpk.parseCertificate(JIM_X509_TXT, 'pem');
+	t.ok(sshpk.Certificate.isCertificate(cert));
+	t.ok(JIM_KEY.fingerprint().matches(cert.subjectKey));
+	t.ok(cert.isSignedByKey(JIM_KEY));
 	t.end();
 });
 
