@@ -126,6 +126,9 @@ Parameters
   - `rfc4253`: raw OpenSSH wire format
   - `openssh`: new post-OpenSSH 6.5 internal format, produced by 
                `ssh-keygen -o`
+  - `dnssec`: `.key` file format output by `dnssec-keygen` etc
+  - `putty`: the PuTTY `.ppk` file format (supports truncated variant without
+             all the lines from `Private-Lines:` onwards)
 - `options` -- Optional Object, extra options, with keys:
   - `filename` -- Optional String, name for the key being parsed 
                   (eg. the filename that was opened). Used to generate
@@ -234,6 +237,7 @@ Parameters
                       `ssh-keygen -o`
   - `pkcs1`, `pkcs8`: variants of `pem`
   - `rfc4253`: raw OpenSSH wire format
+  - `dnssec`: `.private` format output by `dnssec-keygen` etc.
 - `options` -- Optional Object, extra options, with keys:
   - `filename` -- Optional String, name for the key being parsed
                   (eg. the filename that was opened). Used to generate

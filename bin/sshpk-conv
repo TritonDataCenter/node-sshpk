@@ -97,6 +97,7 @@ if (require.main === module) {
 		console.error('	 - openssh	  like output of ssh-keygen -o');
 		console.error('	 - rfc4253	  raw OpenSSH wire format');
 		console.error('	 - dnssec	  dnssec-keygen format');
+		console.error('  - putty          PuTTY ppk format');
 		console.error('\navailable fingerprint formats:');
 		console.error('  - hex            colon-separated hex for SSH');
 		console.error('                   straight hex for SPKI');
@@ -130,9 +131,7 @@ if (require.main === module) {
 			inFile = fs.createReadStream(inFilePath);
 		}
 	} catch (e) {
-		console.error('sshpk-conv: error opening input file' +
-		     ': ' + e.name + ': ' + e.message);
-		process.exit(1);
+		ifError(e, 'error opening input file');
 	}
 
 	var outFile = process.stdout;
@@ -143,9 +142,7 @@ if (require.main === module) {
 			outFile = fs.createWriteStream(opts.out);
 		}
 	} catch (e) {
-		console.error('sshpk-conv: error opening output file' +
-		    ': ' + e.name + ': ' + e.message);
-		process.exit(1);
+		ifError(e, 'error opening output file');
 	}
 
 	var bufs = [];
@@ -169,20 +166,14 @@ if (require.main === module) {
 		} catch (e) {
 			if (e.name === 'KeyEncryptedError') {
 				getPassword(function (err, pw) {
-					if (err) {
-						console.log('sshpk-conv: ' +
-						    err.name + ': ' +
-						    err.message);
-						process.exit(1);
-					}
+					if (err)
+						ifError(err);
 					parseOpts.passphrase = pw;
 					processKey();
 				});
 				return;
 			}
-			console.error('sshpk-conv: ' +
-			    e.name + ': ' + e.message);
-			process.exit(1);
+			ifError(e);
 		}
 
 		if (opts.derive)
@@ -235,4 +226,18 @@ if (require.main === module) {
 			process.exit(0);
 		});
 	});
+}
+
+function ifError(e, txt) {
+	if (txt)
+		txt = txt + ': ';
+	else
+		txt = '';
+	console.error('sshpk-conv: ' + txt + e.name + ': ' + e.message);
+	if (process.env['DEBUG'] || process.env['V']) {
+		console.error(e.stack);
+		if (e.innerErr)
+			console.error(e.innerErr.stack);
+	}
+	process.exit(1);
 }
