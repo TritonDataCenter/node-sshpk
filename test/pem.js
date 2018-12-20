@@ -356,3 +356,54 @@ test('encrypted rsa private key (3des)', function (t) {
 	t.equal(key.toPublic().toString('ssh'), keySsh.trim());
 	t.end();
 });
+
+test('encrypted pkcs8 ecdsa private key (3des, pbkdf2 sha256)', function (t) {
+	var keyPem = fs.readFileSync(path.join(testDir, 'id_ecdsa_pkcs8_enc'));
+	var key = sshpk.parsePrivateKey(keyPem, 'pem',
+	    { passphrase: 'foobar' });
+	t.equal(key.type, 'ecdsa');
+	t.equal(key.fingerprint('sha256').toString(),
+	    'SHA256:e34c67Npv31uMtfVUEBJln5aOcJugzDaYGsj1Uph5DE');
+	t.end();
+});
+
+test('encrypted pkcs8 ecdsa private key (aes256, pbkdf2 sha256)', function (t) {
+	var keyPem = fs.readFileSync(path.join(testDir, 'id_ecdsa_pkcs8_enc2'));
+	var key = sshpk.parsePrivateKey(keyPem, 'pem',
+	    { passphrase: 'testing123' });
+	t.equal(key.type, 'ecdsa');
+	t.equal(key.fingerprint('sha256').toString(),
+	    'SHA256:e34c67Npv31uMtfVUEBJln5aOcJugzDaYGsj1Uph5DE');
+	t.end();
+});
+
+test('encrypted pkcs8 ecdsa private key (aes256, pbkdf2 sha1)', function (t) {
+	var keyPem = fs.readFileSync(path.join(testDir, 'id_ecdsa_pkcs8_enc3'));
+	var key = sshpk.parsePrivateKey(keyPem, 'pem',
+	    { passphrase: 'foobar123' });
+	t.equal(key.type, 'ecdsa');
+	t.equal(key.fingerprint('sha256').toString(),
+	    'SHA256:e34c67Npv31uMtfVUEBJln5aOcJugzDaYGsj1Uph5DE');
+	t.end();
+});
+
+test('bad encrypted pkcs8 keys', function (t) {
+	var keyPem = fs.readFileSync(
+	    path.join(testDir, 'pkcs8-enc-bad-scheme'));
+	t.throws(function () {
+		sshpk.parsePrivateKey(keyPem, 'pem', { passphrase: 'foobar' });
+	}, /unsupported pem\/pkcs8 encryption scheme/i);
+	keyPem = fs.readFileSync(path.join(testDir, 'pkcs8-enc-bad-kdf'));
+	t.throws(function () {
+		sshpk.parsePrivateKey(keyPem, 'pem', { passphrase: 'foobar' });
+	}, /unsupported pbes2 kdf/i);
+	keyPem = fs.readFileSync(path.join(testDir, 'pkcs8-enc-bad-hash'));
+	t.throws(function () {
+		sshpk.parsePrivateKey(keyPem, 'pem', { passphrase: 'foobar' });
+	}, /unsupported pbkdf2 hash/i);
+	keyPem = fs.readFileSync(path.join(testDir, 'pkcs8-enc-bad-iters'));
+	t.throws(function () {
+		sshpk.parsePrivateKey(keyPem, 'pem', { passphrase: 'foobar' });
+	}, /incorrect passphrase/i);
+	t.end();
+});
