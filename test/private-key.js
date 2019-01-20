@@ -373,6 +373,17 @@ test('PrivateKey.generate ecdsa p-384', function (t) {
 	t.end();
 });
 
+test('pkcs8 PrivateKey without public part', function (t) {
+	var pem = fs.readFileSync(path.join(testDir, 'pkcs8-nopub.pem'));
+	var key = sshpk.parsePrivateKey(pem, 'pem');
+	t.strictEqual(key.type, 'ecdsa');
+	t.strictEqual(key.curve, 'nistp256');
+	var fp = sshpk.parseFingerprint(
+	    'SHA256:wU/JTqlHV21vv0tcaNOFUZD2FXciO2KwImEOW1+AH50');
+	t.ok(fp.matches(key));
+	t.end();
+});
+
 if (process.version.match(/^v0\.[0-9]\./))
 	return;
 
