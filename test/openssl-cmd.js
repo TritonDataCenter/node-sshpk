@@ -541,6 +541,136 @@ test('utf8string in issuer DN (#40)', function (t) {
 	kid.stdin.end();
 });
 
+test('certs with <2050 dates should use UTCTime', function (t) {
+	var pem = fs.readFileSync(path.join(testDir, 'id_rsa'));
+	var key = sshpk.parsePrivateKey(pem, 'pkcs1');
+
+	var id = sshpk.identityFromDN('cn=foobar');
+	var opts = {};
+	opts.validFrom = new Date('1990-01-02T03:04:05Z');
+	opts.validUntil = new Date('2010-01-02T03:04:05Z');
+	var cert = sshpk.createSelfSignedCertificate(id, key, opts);
+	var certPem = cert.toBuffer('pem');
+
+	var kid = spawn('openssl', ['asn1parse']);
+	var bufs = [];
+	kid.stdout.on('data', bufs.push.bind(bufs));
+	kid.on('close', function (rc) {
+		t.equal(rc, 0);
+		var output = Buffer.concat(bufs).toString('utf8');
+		var lines = output.split('\n');
+		var found = 0;
+		for (var i = 0; i < lines.length; ++i) {
+			if (!lines[i])
+				continue;
+			var line = asn1parse_line2obj(lines[i]);
+			if (line.tag === 'UTCTIME') {
+				if (line.value === '900102030405Z' ||
+				    line.value === '100102030405Z') {
+					++found;
+				} else {
+					t.fail('unexpected utctime: ' +
+					    line.value);
+				}
+			}
+		}
+		t.equal(found, 2);
+		t.end();
+	});
+	kid.stdin.write(certPem);
+	kid.stdin.end();
+});
+
+test('certs with >=2050 dates should use GeneralizedTime', function (t) {
+	var pem = fs.readFileSync(path.join(testDir, 'id_rsa'));
+	var key = sshpk.parsePrivateKey(pem, 'pkcs1');
+
+	var id = sshpk.identityFromDN('cn=foobar');
+	var opts = {};
+	opts.validFrom = new Date('2050-01-02T03:04:05Z');
+	opts.validUntil = new Date('2051-01-02T03:04:05Z');
+	var cert = sshpk.createSelfSignedCertificate(id, key, opts);
+	var certPem = cert.toBuffer('pem');
+
+	var kid = spawn('openssl', ['asn1parse']);
+	var bufs = [];
+	kid.stdout.on('data', bufs.push.bind(bufs));
+	kid.on('close', function (rc) {
+		t.equal(rc, 0);
+		var output = Buffer.concat(bufs).toString('utf8');
+		var lines = output.split('\n');
+		var found = 0;
+		for (var i = 0; i < lines.length; ++i) {
+			if (!lines[i])
+				continue;
+			var line = asn1parse_line2obj(lines[i]);
+			if (line.tag === 'UTCTIME') {
+				t.fail('unexpected utctime: ' + line.value);
+			}
+			if (line.tag === 'GENERALIZEDTIME') {
+				if (line.value === '20500102030405Z') {
+					++found;
+				} else if (line.value === '20510102030405Z') {
+					++found;
+				} else {
+					t.fail('bad gentime: ' + line.value);
+				}
+			}
+		}
+		t.equal(found, 2);
+		t.end();
+	});
+	kid.stdin.write(certPem);
+	kid.stdin.end();
+});
+
+test('certs with <1950 dates should use GeneralizedTime', function (t) {
+	var pem = fs.readFileSync(path.join(testDir, 'id_rsa'));
+	var key = sshpk.parsePrivateKey(pem, 'pkcs1');
+
+	var id = sshpk.identityFromDN('cn=foobar');
+	var opts = {};
+	opts.validFrom = new Date('1949-01-02T03:04:05Z');
+	opts.validUntil = new Date('1950-01-02T03:04:05Z');
+	var cert = sshpk.createSelfSignedCertificate(id, key, opts);
+	var certPem = cert.toBuffer('pem');
+
+	var kid = spawn('openssl', ['asn1parse']);
+	var bufs = [];
+	kid.stdout.on('data', bufs.push.bind(bufs));
+	kid.on('close', function (rc) {
+		t.equal(rc, 0);
+		var output = Buffer.concat(bufs).toString('utf8');
+		var lines = output.split('\n');
+		var found = 0;
+		for (var i = 0; i < lines.length; ++i) {
+			if (!lines[i])
+				continue;
+			var line = asn1parse_line2obj(lines[i]);
+			if (line.tag === 'UTCTIME') {
+				if (line.value === '500102030405Z') {
+					++found;
+				} else {
+					t.fail('unexpected utctime: ' +
+					    line.value);
+				}
+			}
+			if (line.tag === 'GENERALIZEDTIME') {
+				if (line.value === '19490102030405Z') {
+					++found;
+				} else {
+					t.fail('unexpected gentime: ' +
+					     line.value);
+				}
+			}
+		}
+		t.equal(found, 2);
+		t.end();
+	});
+	kid.stdin.write(certPem);
+	kid.stdin.end();
+});
+
 test('teardown', function (t) {
     temp.cleanup(function () {
         t.end();
