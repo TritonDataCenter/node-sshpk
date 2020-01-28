@@ -23,7 +23,7 @@ var testDir = path.join(__dirname, 'assets');
 var sandbox;
 
 test('set up sandbox', function (t) {
-	sandbox = sinon.sandbox.create();
+	sandbox = sinon.createSandbox();
 	sandbox.stub(crypto, 'createECDH');
 	t.ok(crypto.createECDH('prime256v1') === undefined);
 

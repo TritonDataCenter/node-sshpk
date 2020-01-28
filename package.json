@@ -49,12 +49,11 @@
     "ecc-jsbn": "~0.1.1",
     "bcrypt-pbkdf": "^1.0.0"
   },
-  "optionalDependencies": {
-  },
+  "optionalDependencies": {},
   "devDependencies": {
     "tape": "^3.5.0",
     "benchmark": "^1.0.0",
-    "sinon": "^1.17.2",
+    "sinon": "^8.1.1",
     "temp": "^0.8.2"
   }
 }
