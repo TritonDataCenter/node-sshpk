@@ -7,3 +7,5 @@ test
 tools
 coverage
 man/src
+.travis.yml
+.npmignore
