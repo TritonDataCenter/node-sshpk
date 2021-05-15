@@ -7,7 +7,8 @@ var sshpk = require('../lib/index');
 
 var testDir = path.join(__dirname, 'assets');
 
-var PUTTY_DSA, PUTTY_DSA_PUB, PUTTY_RSA, PUTTY_RSA_SSH, PUTTY_DSA_SSH, PUTTY_DSA_LONG;
+var PUTTY_DSA, PUTTY_DSA_PUB, PUTTY_RSA, PUTTY_RSA_SSH, PUTTY_DSA_SSH, PUTTY_DSA_LONG,
+	PUTTY_ECDSA, PUTTY_ECDSA_SSH, PUTTY_ED25519, PUTTY_ED25519_SSH;
 
 test('setup', function (t) {
 	PUTTY_DSA = fs.readFileSync(path.join(testDir, 'dsa.ppk'));
@@ -16,6 +17,10 @@ test('setup', function (t) {
 	PUTTY_RSA_SSH = fs.readFileSync(path.join(testDir, 'rsa-ppk'));
 	PUTTY_DSA_SSH = fs.readFileSync(path.join(testDir, 'dsa-ppk'));
 	PUTTY_DSA_LONG = fs.readFileSync(path.join(testDir, 'dsa-pub-err.ppk'));
+	PUTTY_ECDSA = fs.readFileSync(path.join(testDir, 'ecdsa.ppk'));
+	PUTTY_ECDSA_SSH = fs.readFileSync(path.join(testDir, 'ecdsa-ppk'));
+	PUTTY_ED25519 = fs.readFileSync(path.join(testDir, 'ed25519.ppk'));
+	PUTTY_ED25519_SSH = fs.readFileSync(path.join(testDir, 'ed25519-ppk'));
 	t.end();
 });
 
@@ -77,5 +82,27 @@ test('generate dsa', function (t) {
 	k.comment = 'dsa-key-20210515'
 	var ppk = k.toString('putty');
 	t.strictEqual(ppk, PUTTY_DSA_PUB.toString('ascii'));
+	t.end();
+});
+
+test('parse ECDSA ppk file', function (t) {
+	var k = sshpk.parsePrivateKey(PUTTY_ECDSA, 'putty', { passphrase: 'foobar' });
+	t.strictEqual(k.type, 'ecdsa');
+	t.strictEqual(k.fingerprint('sha256').toString(),
+	    'SHA256:KlA2NZLpY9cl/HatiN1c5wuzAv4CfpbjH0lHDa+oEKI');
+	t.strictEqual(k.comment, 'ecdsa-key-20210515');
+	var priv = k.toString('pem').trim();
+	t.strictEqual(priv, PUTTY_ECDSA_SSH.toString('ascii').trim());
+	t.end();
+});
+
+test('parse Ed25519 ppk file', function (t) {
+	var k = sshpk.parsePrivateKey(PUTTY_ED25519, 'putty', { passphrase: 'foobar' });
+	t.strictEqual(k.type, 'ed25519');
+	t.strictEqual(k.fingerprint('sha256').toString(),
+	    'SHA256:b+JitNJGr/mdtSuCZ+qBtFcixd8OrUBhc72b9DjGyJw');
+	t.strictEqual(k.comment, 'ed25519-key-20210515');
+	var priv = k.toString('pem').trim();
+	t.strictEqual(priv, PUTTY_ED25519_SSH.toString('ascii').trim());
 	t.end();
 });
