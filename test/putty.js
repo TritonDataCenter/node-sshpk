@@ -8,7 +8,7 @@ var sshpk = require('../lib/index');
 var testDir = path.join(__dirname, 'assets');
 
 var PUTTY_DSA, PUTTY_DSA_PUB, PUTTY_RSA, PUTTY_RSA_SSH, PUTTY_DSA_SSH, PUTTY_DSA_LONG,
-	PUTTY_ECDSA, PUTTY_ECDSA_SSH, PUTTY_ED25519, PUTTY_ED25519_SSH;
+	PUTTY_ECDSA, PUTTY_ECDSA_SSH, PUTTY_ED25519, PUTTY_ED25519_SSH, PUTTY_PPK3, PUTTY_PPK3_PEM;
 
 test('setup', function (t) {
 	PUTTY_DSA = fs.readFileSync(path.join(testDir, 'dsa.ppk'));
@@ -21,6 +21,8 @@ test('setup', function (t) {
 	PUTTY_ECDSA_SSH = fs.readFileSync(path.join(testDir, 'ecdsa-ppk'));
 	PUTTY_ED25519 = fs.readFileSync(path.join(testDir, 'ed25519.ppk'));
 	PUTTY_ED25519_SSH = fs.readFileSync(path.join(testDir, 'ed25519-ppk'));
+	PUTTY_PPK3 = fs.readFileSync(path.join(testDir, 'ppk3'));
+	PUTTY_PPK3_PEM = fs.readFileSync(path.join(testDir, 'ppk3.pem'));
 	t.end();
 });
 
@@ -104,5 +106,17 @@ test('parse Ed25519 ppk file', function (t) {
 	t.strictEqual(k.comment, 'ed25519-key-20210515');
 	var priv = k.toString('pem').trim();
 	t.strictEqual(priv, PUTTY_ED25519_SSH.toString('ascii').trim());
+	t.end();
+});
+
+test('parse PPK3 file', function (t) {
+	var k = sshpk.parsePrivateKey(PUTTY_PPK3, 'putty');
+	t.strictEqual(k.type, 'rsa');
+	t.strictEqual(k.fingerprint('sha256').toString(),
+	    'SHA256:JSIhH7DnsQdxQtE/NnqIAFFIL7NSJ9LJDwLgC6g4xfU');
+	t.strictEqual(k.comment, 'rsa-key-20211214');
+
+	var priv = k.toString('pem').trim();
+	t.strictEqual(priv, PUTTY_PPK3_PEM.toString('ascii').trim());
 	t.end();
 });
