@@ -20,7 +20,7 @@
 # Get md2man-roff from <https://github.com/sunaku/md2man>
 MD2MAN		:= md2man-roff
 NPM_EXEC	:= npm
-TAP		:= ./node_modules/.bin/tape
+TAP		:= ./node_modules/tape/bin/tape
 
 #
 # Files
