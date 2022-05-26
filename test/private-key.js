@@ -127,6 +127,16 @@ test('PrivateKey load ed25519 key (w/ public curdle-pkix-05)', function (t) {
 	t.end();
 });
 
+test('PrivateKey convert ed25519 key from pkcs1 to pkcs8', function (t) {
+	var keyPem = fs.readFileSync(path.join(testDir, 'id_ed25519.pem'));
+	var key = sshpk.parsePrivateKey(keyPem, 'pem');
+	var newPem = key.toString('pkcs8');
+	var key2 = sshpk.parsePrivateKey(newPem, 'pem');
+	t.strictEqual(key.type, 'ed25519');
+	t.strictEqual(key.size, 256);
+	t.end();
+});
+
 test('PrivateKey invalid ed25519 key (not DER)', function (t) {
 	var keyPem = fs.readFileSync(path.join(testDir,
 	    'ed25519-invalid-ber.pem'));
