@@ -212,6 +212,58 @@ test('parse pkcs8 unencrypted private keys', function (t) {
 	t.end();
 });
 
+test('parse and produce pkcs#1 encrypted pem rsa', function (t) {
+	var keyPem = fs.readFileSync(path.join(testDir, 'pkcs1-enc'));
+	t.throws(function () {
+		sshpk.parsePrivateKey(keyPem, 'pkcs1');
+	});
+	t.throws(function () {
+		sshpk.parsePrivateKey(keyPem, 'pkcs1',
+		    { passphrase: 'incorrect' });
+	});
+	var key = sshpk.parsePrivateKey(keyPem, 'pkcs1',
+	    { passphrase: 'foobar' });
+	t.strictEqual(key.type, 'rsa');
+
+	var keySsh2 = key.toBuffer('pkcs1', { passphrase: 'foobar2' });
+	t.throws(function () {
+		sshpk.parsePrivateKey(keySsh2, 'pkcs1',
+		    { passphrase: 'foobar' });
+	});
+	var key2 = sshpk.parsePrivateKey(keySsh2, 'pkcs1',
+	    { passphrase: 'foobar2' });
+	t.strictEqual(key2.type, 'rsa');
+
+	//console.log();
+
+	t.end();
+});
+
+test('parse and produce pkcs#8 encrypted pem rsa', function (t) {
+	var keyPem = fs.readFileSync(path.join(testDir, 'pkcs8-enc'));
+	t.throws(function () {
+		sshpk.parsePrivateKey(keyPem, 'pkcs8');
+	});
+	t.throws(function () {
+		sshpk.parsePrivateKey(keyPem, 'pkcs8',
+		    { passphrase: 'incorrect' });
+	});
+	var key = sshpk.parsePrivateKey(keyPem, 'pkcs8',
+	    { passphrase: 'foobar' });
+	t.strictEqual(key.type, 'rsa');
+
+	var keySsh2 = key.toBuffer('pkcs8', { passphrase: 'foobar2' });
+	t.throws(function () {
+		sshpk.parsePrivateKey(keySsh2, 'pkcs8',
+		    { passphrase: 'foobar' });
+	});
+	var key2 = sshpk.parsePrivateKey(keySsh2, 'pkcs8',
+	    { passphrase: 'foobar2' });
+	t.strictEqual(key2.type, 'rsa');
+
+	t.end();
+});
+
 test('parse and produce encrypted ssh-private ecdsa', function (t) {
 	var keySsh = fs.readFileSync(path.join(testDir, 'id_ecdsa_enc'));
 	t.throws(function () {
@@ -333,6 +385,64 @@ test('PrivateKey#createSign on ECDSA 256 key', function (t) {
 	t.ok(sig instanceof sshpk.Signature);
 
 	var v = KEY_ECDSA2.createVerify('sha256');
+	v.update('foobar');
+	t.ok(v.verify(sig));
+
+	t.end();
+});
+
+test('PrivateKey#createSign on encrypted pkcs#1 key', function (t) {
+	var privateKey = sshpk.parsePrivateKey(fs.readFileSync(path.join(testDir, 'id_rsa')), 'pem');
+	var publicKey = privateKey.toPublic();
+
+	var encrypted = privateKey.toBuffer("pkcs1", {passphrase: "foobar"});
+
+	t.throws(function () {
+		sshpk.parsePrivateKey(encrypted, "pem");
+	});
+
+	t.throws(function () {
+		sshpk.parsePrivateKey(encrypted, "pem", {passphrase: "incorrect"});
+	});
+
+	var encPrivateKey = sshpk.parsePrivateKey(encrypted, "pem", {passphrase: "foobar"});
+
+	var s = encPrivateKey.createSign('sha256');
+	s.update('foobar');
+	var sig = s.sign();
+	t.ok(sig);
+	t.ok(sig instanceof sshpk.Signature);
+
+	var v = publicKey.createVerify('sha256');
+	v.update('foobar');
+	t.ok(v.verify(sig));
+
+	t.end();
+});
+
+test('PrivateKey#createSign on encrypted pkcs#8 key', function (t) {
+	var privateKey = sshpk.parsePrivateKey(fs.readFileSync(path.join(testDir, 'id_rsa')), 'pem');
+	var publicKey = privateKey.toPublic();
+
+	var encrypted = privateKey.toBuffer("pkcs8", {passphrase: "foobar"});
+
+	t.throws(function () {
+		sshpk.parsePrivateKey(encrypted, "pem");
+	});
+
+	t.throws(function () {
+		sshpk.parsePrivateKey(encrypted, "pem", {passphrase: "incorrect"});
+	});
+
+	var encPrivateKey = sshpk.parsePrivateKey(encrypted, "pem", {passphrase: "foobar"});
+
+	var s = encPrivateKey.createSign('sha256');
+	s.update('foobar');
+	var sig = s.sign();
+	t.ok(sig);
+	t.ok(sig instanceof sshpk.Signature);
+
+	var v = publicKey.createVerify('sha256');
 	v.update('foobar');
 	t.ok(v.verify(sig));
 
