@@ -485,6 +485,9 @@ Parameters
                                   `lifetime` will be ignored
    - `serial` -- optional Buffer, the serial number of the certificate
    - `purposes` -- optional Array of String, X.509 key usage restrictions
+   - `extensions` -- optional Array of String to defined openssh extensions
+                     permit-pty, permit-user-rc, permit-port-forwarding, 
+                     permit-agent-forwarding, permit-X11-forwarding
 
 ### `Certificate#subjects`
 
