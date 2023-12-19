@@ -452,3 +452,24 @@ test('example cert: openssh extensions', function (t) {
 
 	t.end();
 });
+
+test('example cert: sha384 rsa', function (t) {
+	var cert = sshpk.parseCertificate(
+	    fs.readFileSync(path.join(testDir, 'sha384test-cert.pem')),
+	    'pem');
+	t.strictEqual(cert.subjectKey.type, 'rsa');
+	t.strictEqual(cert.subjects[0].cn, 'sha384 test');
+
+	var key = sshpk.parsePrivateKey(
+	    fs.readFileSync(path.join(testDir, 'sha384test-key.pem')),
+	    'pem');
+	t.strictEqual(key.type, 'rsa');
+
+	t.ok(cert.isSignedByKey(key));
+	t.ok(cert.subjectKey.fingerprint().matches(key));
+
+	t.strictEqual(cert.fingerprint('sha1').toString(),
+	    'SHA1:BITz0TaHh9R5H1NNyidAPcJ1yIs');
+
+	t.end();
+});
